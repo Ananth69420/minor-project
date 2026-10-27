@@ -1,0 +1,125 @@
+import os
+import json
+import numpy as np
+from env.city import CityEnv
+from agents.baseline import BaselineDispatcher, ForecastRuleDispatcher
+from agents.qlearning import QLearningAgent
+
+def evaluate():
+    env = CityEnv(seed=42)
+    baseline = BaselineDispatcher()
+    forecast_rule = ForecastRuleDispatcher()
+    agent = QLearningAgent(num_states=576, num_actions=6)
+    agent.load("q_table.npy")
+
+    num_eval_episodes = 50
+    base_metrics = []
+    rule_metrics = []
+    rl_metrics = []
+
+    # Store full episode frames for replay on episode 0
+    base_replay_frames = []
+    rl_replay_frames = []
+
+    # Final test seeds: strictly 5000-5049
+    for ep in range(num_eval_episodes):
+        ep_seed = 5000 + ep
+        surge_quad = ep % 4
+
+        # 1. Run Baseline (Nearest Vehicle)
+        env.reset(seed=ep_seed, surge_quad=surge_quad)
+        for step in range(300):
+            if ep == 0:
+                base_replay_frames.append(env.get_frame())
+            for v in env.vehicles:
+                if v["status"] == "idle":
+                    a = baseline.select_action(env, v["id"])
+                    if a is not None:
+                        env.dispatch(v["id"], a)
+            env.step()
+        base_metrics.append(env.get_metrics())
+
+        # 2. Run Forecast-Aware Rule
+        env.reset(seed=ep_seed, surge_quad=surge_quad)
+        for step in range(300):
+            for v in env.vehicles:
+                if v["status"] == "idle":
+                    a = forecast_rule.select_action(env, v["id"])
+                    if a is not None:
+                        env.dispatch(v["id"], a)
+            env.step()
+        rule_metrics.append(env.get_metrics())
+
+        # 3. Run RL Agent (Q-Learning with Action Masking)
+        env.reset(seed=ep_seed, surge_quad=surge_quad)
+        for step in range(300):
+            if ep == 0:
+                rl_replay_frames.append(env.get_frame())
+            for v in env.vehicles:
+                if v["status"] == "idle":
+                    s = env.encode_state(v["id"])
+                    val_acts = env.get_valid_actions(v["id"])
+                    a = agent.select_action(s, val_acts, explore=False)
+                    env.dispatch(v["id"], a)
+            env.step()
+        rl_metrics.append(env.get_metrics())
+
+    # Helper function for mean and std
+    def calc_stats(metric_list, key):
+        vals = [m[key] for m in metric_list]
+        return {
+            "mean": round(float(np.mean(vals)), 2),
+            "std": round(float(np.std(vals)), 2)
+        }
+
+    keys = ["avg_wait", "surge_wait", "normal_wait", "served", "dropped", "total_dist"]
+    base_summary = {k: calc_stats(base_metrics, k) for k in keys}
+    rule_summary = {k: calc_stats(rule_metrics, k) for k in keys}
+    rl_summary = {k: calc_stats(rl_metrics, k) for k in keys}
+
+    results = {
+        "num_episodes": num_eval_episodes,
+        "baseline": base_summary,
+        "forecast_rule": rule_summary,
+        "qlearning": rl_summary
+    }
+
+    # Print three-policy results table
+    print("\n" + "=" * 90)
+    print(f"{'Metric':<26} | {'Baseline (Nearest)':<18} | {'Forecast Rule':<18} | {'RL (Q-Learning)':<18}")
+    print("-" * 90)
+    print(f"{'Average Wait (steps)':<26} | {base_summary['avg_wait']['mean']:>6.2f} +/- {base_summary['avg_wait']['std']:<6.2f} | {rule_summary['avg_wait']['mean']:>6.2f} +/- {rule_summary['avg_wait']['std']:<6.2f} | {rl_summary['avg_wait']['mean']:>6.2f} +/- {rl_summary['avg_wait']['std']:<6.2f}")
+    print(f"{'Surge Wait (steps)':<26} | {base_summary['surge_wait']['mean']:>6.2f} +/- {base_summary['surge_wait']['std']:<6.2f} | {rule_summary['surge_wait']['mean']:>6.2f} +/- {rule_summary['surge_wait']['std']:<6.2f} | {rl_summary['surge_wait']['mean']:>6.2f} +/- {rl_summary['surge_wait']['std']:<6.2f}")
+    print(f"{'Normal Wait (steps)':<26} | {base_summary['normal_wait']['mean']:>6.2f} +/- {base_summary['normal_wait']['std']:<6.2f} | {rule_summary['normal_wait']['mean']:>6.2f} +/- {rule_summary['normal_wait']['std']:<6.2f} | {rl_summary['normal_wait']['mean']:>6.2f} +/- {rl_summary['normal_wait']['std']:<6.2f}")
+    print(f"{'Requests Served':<26} | {base_summary['served']['mean']:>6.2f} +/- {base_summary['served']['std']:<6.2f} | {rule_summary['served']['mean']:>6.2f} +/- {rule_summary['served']['std']:<6.2f} | {rl_summary['served']['mean']:>6.2f} +/- {rl_summary['served']['std']:<6.2f}")
+    print(f"{'Requests Dropped':<26} | {base_summary['dropped']['mean']:>6.2f} +/- {base_summary['dropped']['std']:<6.2f} | {rule_summary['dropped']['mean']:>6.2f} +/- {rule_summary['dropped']['std']:<6.2f} | {rl_summary['dropped']['mean']:>6.2f} +/- {rl_summary['dropped']['std']:<6.2f}")
+    print(f"{'Total Distance':<26} | {base_summary['total_dist']['mean']:>6.2f} +/- {base_summary['total_dist']['std']:<6.2f} | {rule_summary['total_dist']['mean']:>6.2f} +/- {rule_summary['total_dist']['std']:<6.2f} | {rl_summary['total_dist']['mean']:>6.2f} +/- {rl_summary['total_dist']['std']:<6.2f}")
+    print("=" * 90 + "\n")
+
+    # Save results.json
+    with open("results.json", "w") as f:
+        json.dump(results, f, indent=2)
+    print("Saved results.json")
+
+    # Read training curve if exists
+    training_data = []
+    if os.path.exists("training_curve.json"):
+        with open("training_curve.json", "r") as f:
+            training_data = json.load(f)
+
+    # Save replay_data.js in dashboard/ directory
+    os.makedirs("dashboard", exist_ok=True)
+    replay_payload = {
+        "results": results,
+        "training": training_data,
+        "baseline_frames": base_replay_frames,
+        "rl_frames": rl_replay_frames
+    }
+
+    replay_js_content = f"const REPLAY_DATA = {json.dumps(replay_payload)};\n"
+    with open(os.path.join("dashboard", "replay_data.js"), "w") as f:
+        f.write(replay_js_content)
+    print("Saved dashboard/replay_data.js")
+
+if __name__ == "__main__":
+    evaluate()
