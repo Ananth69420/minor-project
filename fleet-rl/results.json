@@ -1,81 +1,86 @@
 {
+  "version": "v2",
+  "grid_size": 16,
+  "num_vehicles": 8,
+  "p_normal": 0.25,
+  "p_surge": 0.55,
   "num_episodes": 50,
   "baseline": {
     "avg_wait": {
-      "mean": 15.52,
-      "std": 1.84
+      "mean": 14.35,
+      "std": 1.76
     },
     "surge_wait": {
-      "mean": 20.11,
-      "std": 2.55
+      "mean": 17.15,
+      "std": 2.74
     },
     "normal_wait": {
-      "mean": 9.57,
-      "std": 1.98
+      "mean": 11.13,
+      "std": 1.26
     },
     "served": {
-      "mean": 87.52,
-      "std": 6.23
+      "mean": 97.7,
+      "std": 6.73
     },
     "dropped": {
-      "mean": 10.6,
-      "std": 4.09
+      "mean": 3.24,
+      "std": 2.73
     },
     "total_dist": {
-      "mean": 984.84,
-      "std": 64.53
+      "mean": 1901.5,
+      "std": 138.78
     }
   },
   "forecast_rule": {
     "avg_wait": {
-      "mean": 15.57,
-      "std": 1.88
+      "mean": 13.96,
+      "std": 1.67
     },
     "surge_wait": {
-      "mean": 20.2,
-      "std": 2.36
+      "mean": 16.34,
+      "std": 2.64
     },
     "normal_wait": {
-      "mean": 9.46,
-      "std": 1.79
+      "mean": 11.15,
+      "std": 1.05
     },
     "served": {
-      "mean": 88.22,
-      "std": 6.28
+      "mean": 97.66,
+      "std": 6.48
     },
     "dropped": {
-      "mean": 9.9,
-      "std": 4.22
+      "mean": 2.92,
+      "std": 2.78
     },
     "total_dist": {
-      "mean": 1007.26,
-      "std": 61.29
+      "mean": 1961.84,
+      "std": 126.9
     }
   },
   "qlearning": {
     "avg_wait": {
-      "mean": 15.57,
-      "std": 1.86
+      "mean": 13.87,
+      "std": 1.44
     },
     "surge_wait": {
-      "mean": 20.26,
-      "std": 2.57
+      "mean": 16.32,
+      "std": 2.51
     },
     "normal_wait": {
-      "mean": 9.48,
-      "std": 1.81
+      "mean": 11.04,
+      "std": 1.02
     },
     "served": {
-      "mean": 87.38,
-      "std": 6.11
+      "mean": 97.96,
+      "std": 6.69
     },
     "dropped": {
-      "mean": 10.8,
-      "std": 4.17
+      "mean": 3.04,
+      "std": 2.93
     },
     "total_dist": {
-      "mean": 1078.48,
-      "std": 55.68
+      "mean": 2081.66,
+      "std": 121.31
     }
   }
 }

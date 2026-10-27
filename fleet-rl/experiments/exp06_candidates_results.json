@@ -1,0 +1,71 @@
+[
+  {
+    "name": "Candidate A (16x16, 6 veh, p=0.20/0.45)",
+    "grid_size": 16,
+    "num_vehicles": 6,
+    "p_normal": 0.2,
+    "p_surge": 0.45,
+    "baseline": {
+      "avg_wait": 15.907499999999997,
+      "surge_wait": 19.4509,
+      "served": 75.945,
+      "dropped": 5.03,
+      "dist": 1458.045
+    },
+    "forecast_rule": {
+      "avg_wait": 15.5974,
+      "surge_wait": 18.8072,
+      "served": 76.16,
+      "dropped": 4.87,
+      "dist": 1493.185
+    },
+    "diff_surge_wait": -0.643699999999999,
+    "diff_avg_wait": -0.3100999999999967
+  },
+  {
+    "name": "Candidate B (16x16, 8 veh, p=0.25/0.55)",
+    "grid_size": 16,
+    "num_vehicles": 8,
+    "p_normal": 0.25,
+    "p_surge": 0.55,
+    "baseline": {
+      "avg_wait": 14.383,
+      "surge_wait": 17.2927,
+      "served": 96.25,
+      "dropped": 3.525,
+      "dist": 1883.435
+    },
+    "forecast_rule": {
+      "avg_wait": 13.845550000000003,
+      "surge_wait": 16.374850000000002,
+      "served": 96.61,
+      "dropped": 3.11,
+      "dist": 1931.075
+    },
+    "diff_surge_wait": -0.9178499999999978,
+    "diff_avg_wait": -0.5374499999999962
+  },
+  {
+    "name": "Candidate C (20x20, 8 veh, p=0.25/0.55)",
+    "grid_size": 20,
+    "num_vehicles": 8,
+    "p_normal": 0.25,
+    "p_surge": 0.55,
+    "baseline": {
+      "avg_wait": 18.21585,
+      "surge_wait": 21.7148,
+      "served": 88.29,
+      "dropped": 9.925,
+      "dist": 2065.805
+    },
+    "forecast_rule": {
+      "avg_wait": 17.8426,
+      "surge_wait": 21.014049999999997,
+      "served": 88.48,
+      "dropped": 9.66,
+      "dist": 2098.245
+    },
+    "diff_surge_wait": -0.7007500000000029,
+    "diff_avg_wait": -0.37324999999999875
+  }
+]

@@ -4,8 +4,9 @@ import time
 import numpy as np
 from env.city import CityEnv
 from agents.qlearning import QLearningAgent
+from config import ENV_V2
 
-# Configuration parameters
+# Configuration parameters for V2 environment
 config = {
     "num_episodes": 10000,
     "learning_rate": 0.05,
@@ -18,7 +19,15 @@ config = {
 
 def train():
     np.random.seed(config["seed"])
-    env = CityEnv(seed=config["seed"])
+    env = CityEnv(
+        grid_size=ENV_V2["grid_size"],
+        num_vehicles=ENV_V2["num_vehicles"],
+        max_steps=ENV_V2["max_steps"],
+        max_wait=ENV_V2["max_wait"],
+        p_normal=ENV_V2["p_normal"],
+        p_surge=ENV_V2["p_surge"],
+        seed=config["seed"]
+    )
     agent = QLearningAgent(
         num_states=576,
         num_actions=6,
@@ -41,15 +50,13 @@ def train():
     num_episodes = config["num_episodes"]
 
     for ep in range(num_episodes):
-        # Rotate surge location across the 4 quadrants
         surge_quad = ep % 4
-        # Training seeds from 2000 to 4999 (completely disjoint from val 1000-1199 and test 5000-5049)
+        # Training seeds strictly in range [2000, 4999] (disjoint from val 1000-1199 and test 5000-5049)
         train_seed = 2000 + (ep % 3000)
         env.reset(seed=train_seed, surge_quad=surge_quad)
         ep_reward = 0.0
 
         while True:
-            # Decisions for idle vehicles
             for v in env.vehicles:
                 if v["status"] == "idle":
                     s = env.encode_state(v["id"])
@@ -87,7 +94,7 @@ def train():
         history["served"].append(m["served"])
         history["dropped"].append(m["dropped"])
 
-        if (ep + 1) % 500 == 0 or (ep + 1) == num_episodes:
+        if (ep + 1) % 1000 == 0 or (ep + 1) == num_episodes:
             recent_reward = np.mean(history["reward"][-100:])
             recent_wait = np.mean(history["avg_wait"][-100:])
             recent_served = np.mean(history["served"][-100:])

@@ -1,18 +1,34 @@
 import os
+import sys
 import json
 import numpy as np
 from env.city import CityEnv
 from agents.baseline import BaselineDispatcher, ForecastRuleDispatcher
 from agents.qlearning import QLearningAgent
+from config import ENV_V1, ENV_V2
 
-def evaluate():
-    env = CityEnv(seed=42)
+def evaluate(version="v2", num_eval_episodes=50, save_files=True):
+    cfg = ENV_V2 if version == "v2" else ENV_V1
+    print(f"\n==========================================================================================")
+    print(f"RUNNING FINAL THREE-POLICY EVALUATION ({cfg['version'].upper()}: Grid={cfg['grid_size']}x{cfg['grid_size']}, Fleet={cfg['num_vehicles']})")
+    print(f"Test Seeds: 5000 to {5000 + num_eval_episodes - 1} (Strictly Reserved Test Seeds, N={num_eval_episodes})")
+    print(f"==========================================================================================")
+
+    env = CityEnv(
+        grid_size=cfg["grid_size"],
+        num_vehicles=cfg["num_vehicles"],
+        max_steps=cfg["max_steps"],
+        max_wait=cfg["max_wait"],
+        p_normal=cfg["p_normal"],
+        p_surge=cfg["p_surge"],
+        seed=42
+    )
+
     baseline = BaselineDispatcher()
     forecast_rule = ForecastRuleDispatcher()
     agent = QLearningAgent(num_states=576, num_actions=6)
     agent.load("q_table.npy")
 
-    num_eval_episodes = 50
     base_metrics = []
     rule_metrics = []
     rl_metrics = []
@@ -21,7 +37,7 @@ def evaluate():
     base_replay_frames = []
     rl_replay_frames = []
 
-    # Final test seeds: strictly 5000-5049
+    # Final test seeds: strictly 5000 to 5000 + num_eval_episodes - 1
     for ep in range(num_eval_episodes):
         ep_seed = 5000 + ep
         surge_quad = ep % 4
@@ -64,7 +80,6 @@ def evaluate():
             env.step()
         rl_metrics.append(env.get_metrics())
 
-    # Helper function for mean and std
     def calc_stats(metric_list, key):
         vals = [m[key] for m in metric_list]
         return {
@@ -78,6 +93,11 @@ def evaluate():
     rl_summary = {k: calc_stats(rl_metrics, k) for k in keys}
 
     results = {
+        "version": version,
+        "grid_size": cfg["grid_size"],
+        "num_vehicles": cfg["num_vehicles"],
+        "p_normal": cfg["p_normal"],
+        "p_surge": cfg["p_surge"],
         "num_episodes": num_eval_episodes,
         "baseline": base_summary,
         "forecast_rule": rule_summary,
@@ -96,30 +116,41 @@ def evaluate():
     print(f"{'Total Distance':<26} | {base_summary['total_dist']['mean']:>6.2f} +/- {base_summary['total_dist']['std']:<6.2f} | {rule_summary['total_dist']['mean']:>6.2f} +/- {rule_summary['total_dist']['std']:<6.2f} | {rl_summary['total_dist']['mean']:>6.2f} +/- {rl_summary['total_dist']['std']:<6.2f}")
     print("=" * 90 + "\n")
 
-    # Save results.json
-    with open("results.json", "w") as f:
-        json.dump(results, f, indent=2)
-    print("Saved results.json")
+    if save_files:
+        # Save results.json
+        out_name = "results.json" if version == "v2" else "results_v1.json"
+        with open(out_name, "w") as f:
+            json.dump(results, f, indent=2)
+        print(f"Saved {out_name}")
 
-    # Read training curve if exists
-    training_data = []
-    if os.path.exists("training_curve.json"):
-        with open("training_curve.json", "r") as f:
-            training_data = json.load(f)
+        # Read training curve if exists
+        training_data = []
+        if os.path.exists("training_curve.json"):
+            with open("training_curve.json", "r") as f:
+                training_data = json.load(f)
 
-    # Save replay_data.js in dashboard/ directory
-    os.makedirs("dashboard", exist_ok=True)
-    replay_payload = {
-        "results": results,
-        "training": training_data,
-        "baseline_frames": base_replay_frames,
-        "rl_frames": rl_replay_frames
-    }
+        # Also load v1 results if exists to include in replay_data for dashboard comparison
+        v1_results = None
+        if os.path.exists("results_v1.json"):
+            with open("results_v1.json", "r") as f:
+                v1_results = json.load(f)
 
-    replay_js_content = f"const REPLAY_DATA = {json.dumps(replay_payload)};\n"
-    with open(os.path.join("dashboard", "replay_data.js"), "w") as f:
-        f.write(replay_js_content)
-    print("Saved dashboard/replay_data.js")
+        os.makedirs("dashboard", exist_ok=True)
+        replay_payload = {
+            "results": results,
+            "results_v1": v1_results,
+            "training": training_data,
+            "baseline_frames": base_replay_frames,
+            "rl_frames": rl_replay_frames
+        }
+
+        replay_js_content = f"const REPLAY_DATA = {json.dumps(replay_payload)};\n"
+        with open(os.path.join("dashboard", "replay_data.js"), "w") as f:
+            f.write(replay_js_content)
+        print("Saved dashboard/replay_data.js")
+
+    return results
 
 if __name__ == "__main__":
-    evaluate()
+    version = sys.argv[1] if len(sys.argv) > 1 else "v2"
+    evaluate(version=version)

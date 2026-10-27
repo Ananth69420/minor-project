@@ -278,7 +278,7 @@
   <div class="container">
     <header>
       <h1>Autonomous Fleet Dispatch Simulation</h1>
-      <p class="subtitle">Tabular Q-Learning vs. Nearest Baseline vs. Forecast-Aware Rule on 10x10 Grid (300 Steps)</p>
+      <p class="subtitle" id="envSubtitle">Tabular Q-Learning vs. Nearest Baseline vs. Forecast-Aware Rule across 300 Simulation Steps</p>
     </header>
 
     <!-- Side-by-Side Simulation Visualizer -->
@@ -346,9 +346,9 @@
       </div>
     </div>
 
-    <!-- Results Table -->
+    <!-- Results Table: Active Environment -->
     <div class="table-section">
-      <h2>Evaluation Results (50 Fixed-Seed Test Episodes, Seeds 5000–5049)</h2>
+      <h2 id="tableHeading">Evaluation Results (50 Fixed-Seed Test Episodes, Seeds 5000–5049)</h2>
       <table>
         <thead>
           <tr>
@@ -366,6 +366,25 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Companion Table: V1 vs V2 Comparison -->
+    <div class="table-section" id="v1v2Section" style="display: none;">
+      <h2>Environment Comparison: V1 (10x10, 4 Vehicles) vs V2 (16x16, 8 Vehicles)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Environment</th>
+            <th>Baseline Surge Wait</th>
+            <th>Forecast Rule Surge Wait</th>
+            <th>RL Surge Wait</th>
+            <th>Positioning Gain (&Delta; Rule)</th>
+            <th>RL vs Baseline (&Delta; RL)</th>
+          </tr>
+        </thead>
+        <tbody id="tableV1V2">
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <script>
@@ -379,10 +398,12 @@
     const canvasRl = document.getElementById("canvasRl");
     const ctxRl = canvasRl.getContext("2d");
 
-    const CELL_SIZE = 32; // 320 / 10
-
     function drawGrid(ctx, frame) {
       if (!frame) return;
+
+      const gridSize = frame.grid_size || 16;
+      const cellSize = 320 / gridSize;
+      const halfGrid = gridSize / 2;
 
       // Background
       ctx.fillStyle = "#0f172a";
@@ -393,47 +414,47 @@
 
       // Lightly shade hotspot quadrant if in phase 1 (forecast warning) or phase 2 (surge)
       if (phase === 1) {
-        // Pre-surge warning: light blue highlight
-        const qx = (sq % 2) * 5 * CELL_SIZE;
-        const qy = Math.floor(sq / 2) * 5 * CELL_SIZE;
+        const qx = (sq % 2) * halfGrid * cellSize;
+        const qy = Math.floor(sq / 2) * halfGrid * cellSize;
+        const qw = halfGrid * cellSize;
         ctx.fillStyle = "rgba(59, 130, 246, 0.14)";
-        ctx.fillRect(qx, qy, 5 * CELL_SIZE, 5 * CELL_SIZE);
+        ctx.fillRect(qx, qy, qw, qw);
 
         ctx.strokeStyle = "rgba(96, 165, 250, 0.4)";
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(qx + 1, qy + 1, 5 * CELL_SIZE - 2, 5 * CELL_SIZE - 2);
+        ctx.strokeRect(qx + 1, qy + 1, qw - 2, qw - 2);
 
-        ctx.fillStyle = "rgba(147, 197, 253, 0.6)";
+        ctx.fillStyle = "rgba(147, 197, 253, 0.7)";
         ctx.font = "10px sans-serif";
-        ctx.fillText(`FORECAST HOTSPOT Q${sq}`, qx + 8, qy + 18);
+        ctx.fillText(`FORECAST HOTSPOT Q${sq}`, qx + 6, qy + 16);
       } else if (phase === 2) {
-        // Surge active: light gold/amber highlight
-        const qx = (sq % 2) * 5 * CELL_SIZE;
-        const qy = Math.floor(sq / 2) * 5 * CELL_SIZE;
+        const qx = (sq % 2) * halfGrid * cellSize;
+        const qy = Math.floor(sq / 2) * halfGrid * cellSize;
+        const qw = halfGrid * cellSize;
         ctx.fillStyle = "rgba(234, 179, 8, 0.16)";
-        ctx.fillRect(qx, qy, 5 * CELL_SIZE, 5 * CELL_SIZE);
+        ctx.fillRect(qx, qy, qw, qw);
 
         ctx.strokeStyle = "rgba(234, 179, 8, 0.5)";
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(qx + 1, qy + 1, 5 * CELL_SIZE - 2, 5 * CELL_SIZE - 2);
+        ctx.strokeRect(qx + 1, qy + 1, qw - 2, qw - 2);
 
-        ctx.fillStyle = "rgba(253, 224, 71, 0.7)";
+        ctx.fillStyle = "rgba(253, 224, 71, 0.8)";
         ctx.font = "10px sans-serif";
-        ctx.fillText(`SURGE ACTIVE Q${sq}`, qx + 8, qy + 18);
+        ctx.fillText(`SURGE ACTIVE Q${sq}`, qx + 6, qy + 16);
       }
 
       // Grid lines
       ctx.strokeStyle = "#1e293b";
       ctx.lineWidth = 1;
-      for (let i = 0; i <= 10; i++) {
+      for (let i = 0; i <= gridSize; i++) {
         ctx.beginPath();
-        ctx.moveTo(i * CELL_SIZE, 0);
-        ctx.lineTo(i * CELL_SIZE, 320);
+        ctx.moveTo(i * cellSize, 0);
+        ctx.lineTo(i * cellSize, 320);
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.moveTo(0, i * CELL_SIZE);
-        ctx.lineTo(320, i * CELL_SIZE);
+        ctx.moveTo(0, i * cellSize);
+        ctx.lineTo(320, i * cellSize);
         ctx.stroke();
       }
 
@@ -453,20 +474,23 @@
       // Pending requests: dots
       if (frame.pending) {
         ctx.fillStyle = "#ef4444";
+        const dotRadius = Math.max(2.5, cellSize * 0.18);
         for (let r of frame.pending) {
-          const cx = r.px * CELL_SIZE + CELL_SIZE / 2;
-          const cy = r.py * CELL_SIZE + CELL_SIZE / 2;
+          const cx = r.px * cellSize + cellSize / 2;
+          const cy = r.py * cellSize + cellSize / 2;
           ctx.beginPath();
-          ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+          ctx.arc(cx, cy, dotRadius, 0, Math.PI * 2);
           ctx.fill();
         }
       }
 
       // Vehicles: small squares
       if (frame.vehicles) {
+        const vSize = Math.max(8, cellSize - 6);
+        const vOffset = Math.floor((cellSize - vSize) / 2);
         for (let v of frame.vehicles) {
-          const vx = v.x * CELL_SIZE + 8;
-          const vy = v.y * CELL_SIZE + 8;
+          const vx = v.x * cellSize + vOffset;
+          const vy = v.y * cellSize + vOffset;
 
           // Color by status
           if (v.status === "trip") {
@@ -479,10 +503,10 @@
             ctx.fillStyle = "#38bdf8"; // idle
           }
 
-          ctx.fillRect(vx, vy, 16, 16);
+          ctx.fillRect(vx, vy, vSize, vSize);
           ctx.strokeStyle = "#ffffff";
           ctx.lineWidth = 1;
-          ctx.strokeRect(vx, vy, 16, 16);
+          ctx.strokeRect(vx, vy, vSize, vSize);
         }
       }
     }
@@ -515,7 +539,7 @@
         if (phase === 0) {
           badge.className = "phase-badge phase-0";
           badge.innerText = "Phase 0: Normal Demand";
-          desc.innerText = "Steps 0–79 | Standard uniform arrival rate (lambda = 0.20)";
+          desc.innerText = "Steps 0–79 | Standard uniform arrival pattern";
           forecast.innerText = "Inactive";
           forecast.style.color = "#94a3b8";
           surgeLbl.innerText = "Demand: Normal";
@@ -531,7 +555,7 @@
         } else if (phase === 2) {
           badge.className = "phase-badge phase-2";
           badge.innerText = "Phase 2: Surge Active";
-          desc.innerText = `Steps 100–199 | High demand surge localized in Quadrant ${sq} (lambda = 0.70)`;
+          desc.innerText = `Steps 100–199 | High demand surge localized in Quadrant ${sq}`;
           forecast.innerText = `Quadrant ${sq} (Active Surge)`;
           forecast.style.color = "#fbbf24";
           surgeLbl.innerText = `Surge Active in Q${sq}`;
@@ -602,6 +626,15 @@
       const rule = res.forecast_rule || res.baseline;
       const rl = res.qlearning;
 
+      const vName = (res.version || "v2").toUpperCase();
+      const gSize = res.grid_size || 16;
+      const numV = res.num_vehicles || 8;
+
+      document.getElementById("envSubtitle").innerText =
+        `Environment: ${vName} (${gSize}x${gSize} Grid, ${numV} Autonomous Vehicles) | Seeds 5000–5049 (N=50)`;
+      document.getElementById("tableHeading").innerText =
+        `Evaluation Results: ${vName} Environment (${gSize}x${gSize} Grid, ${numV} Vehicles, 50 Test Episodes)`;
+
       // Update counters at header
       document.getElementById("baseServed").innerText = base.served.mean;
       document.getElementById("baseDropped").innerText = base.dropped.mean;
@@ -631,6 +664,43 @@
           <td>${p.data.total_dist.mean} &plusmn; ${p.data.total_dist.std}</td>
         `;
         tbody.appendChild(tr);
+      }
+
+      // If V1 results exist, populate companion comparison table
+      if (REPLAY_DATA.results_v1) {
+        const v1 = REPLAY_DATA.results_v1;
+        const v1b = v1.baseline.surge_wait.mean;
+        const v1r = (v1.forecast_rule || v1.baseline).surge_wait.mean;
+        const v1rl = v1.qlearning.surge_wait.mean;
+        const v1RuleGain = (v1r - v1b).toFixed(2);
+        const v1RlDiff = (v1rl - v1b).toFixed(2);
+
+        const v2b = base.surge_wait.mean;
+        const v2r = rule.surge_wait.mean;
+        const v2rl = rl.surge_wait.mean;
+        const v2RuleGain = (v2r - v2b).toFixed(2);
+        const v2RlDiff = (v2rl - v2b).toFixed(2);
+
+        const v1v2Body = document.getElementById("tableV1V2");
+        v1v2Body.innerHTML = `
+          <tr>
+            <td><strong>V1 (10x10, 4 Veh)</strong></td>
+            <td>${v1b} steps</td>
+            <td>${v1r} steps</td>
+            <td>${v1rl} steps</td>
+            <td>${v1RuleGain} steps</td>
+            <td>${v1RlDiff > 0 ? "+" + v1RlDiff : v1RlDiff} steps</td>
+          </tr>
+          <tr>
+            <td><strong>V2 (${gSize}x${gSize}, ${numV} Veh)</strong></td>
+            <td>${v2b} steps</td>
+            <td>${v2r} steps</td>
+            <td>${v2rl} steps</td>
+            <td>${v2RuleGain} steps</td>
+            <td>${v2RlDiff > 0 ? "+" + v2RlDiff : v2RlDiff} steps</td>
+          </tr>
+        `;
+        document.getElementById("v1v2Section").style.display = "block";
       }
 
       // Chart 1: Training Reward vs Episode

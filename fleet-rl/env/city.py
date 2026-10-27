@@ -1,16 +1,20 @@
 import numpy as np
 
 class CityEnv:
-    def __init__(self, grid_size=10, num_vehicles=4, max_steps=300, max_wait=60, seed=42):
+    def __init__(self, grid_size=10, num_vehicles=4, max_steps=300, max_wait=60, seed=42, p_normal=0.20, p_surge=0.60):
         self.grid_size = grid_size
         self.num_vehicles = num_vehicles
         self.max_steps = max_steps
         self.max_wait = max_wait
         self.seed = seed
+        self.p_normal = p_normal
+        self.p_surge = p_surge
         self.rng = np.random.default_rng(seed)
 
-        # 4 quadrant centers: NW=(2,2), NE=(7,2), SW=(2,7), SE=(7,7)
-        self.quad_centers = [(2, 2), (7, 2), (2, 7), (7, 7)]
+        # Dynamic quadrant centers
+        q1 = grid_size // 4
+        q2 = (3 * grid_size) // 4
+        self.quad_centers = [(q1, q1), (q2, q1), (q1, q2), (q2, q2)]
 
         self.step_num = 0
         self.surge_quad = 0
@@ -19,8 +23,9 @@ class CityEnv:
         self.req_id_counter = 0
 
     def get_quadrant(self, x, y):
-        qx = 0 if x < 5 else 1
-        qy = 0 if y < 5 else 1
+        mid = self.grid_size // 2
+        qx = 0 if x < mid else 1
+        qy = 0 if y < mid else 1
         return qy * 2 + qx
 
     def get_phase(self):
@@ -179,15 +184,16 @@ class CityEnv:
         # Steps 100..199: surge (p = 0.60, 3x rate, 75% in surge quadrant)
         # Steps 200..299: normal (p = 0.20)
         is_surge = (100 <= self.step_num < 200)
-        prob = 0.60 if is_surge else 0.20
+        prob = self.p_surge if is_surge else self.p_normal
 
         if self.rng.random() < prob:
+            mid = self.grid_size // 2
             if is_surge and (self.rng.random() < 0.75):
                 sq = self.surge_quad
-                min_x = 0 if sq in (0, 2) else 5
-                min_y = 0 if sq in (0, 1) else 5
-                px = int(self.rng.integers(min_x, min_x + 5))
-                py = int(self.rng.integers(min_y, min_y + 5))
+                min_x = 0 if sq in (0, 2) else mid
+                min_y = 0 if sq in (0, 1) else mid
+                px = int(self.rng.integers(min_x, min_x + mid))
+                py = int(self.rng.integers(min_y, min_y + mid))
             else:
                 px = int(self.rng.integers(0, self.grid_size))
                 py = int(self.rng.integers(0, self.grid_size))
@@ -355,6 +361,8 @@ class CityEnv:
             "phase": self.get_phase(),
             "surge_quad": self.surge_quad,
             "is_surge": (100 <= self.step_num < 200),
+            "grid_size": self.grid_size,
+            "num_vehicles": self.num_vehicles,
             "vehicles": [
                 {
                     "id": v["id"],

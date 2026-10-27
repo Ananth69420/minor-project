@@ -1,0 +1,81 @@
+{
+  "num_episodes": 50,
+  "baseline": {
+    "avg_wait": {
+      "mean": 15.52,
+      "std": 1.84
+    },
+    "surge_wait": {
+      "mean": 20.11,
+      "std": 2.55
+    },
+    "normal_wait": {
+      "mean": 9.57,
+      "std": 1.98
+    },
+    "served": {
+      "mean": 87.52,
+      "std": 6.23
+    },
+    "dropped": {
+      "mean": 10.6,
+      "std": 4.09
+    },
+    "total_dist": {
+      "mean": 984.84,
+      "std": 64.53
+    }
+  },
+  "forecast_rule": {
+    "avg_wait": {
+      "mean": 15.57,
+      "std": 1.88
+    },
+    "surge_wait": {
+      "mean": 20.2,
+      "std": 2.36
+    },
+    "normal_wait": {
+      "mean": 9.46,
+      "std": 1.79
+    },
+    "served": {
+      "mean": 88.22,
+      "std": 6.28
+    },
+    "dropped": {
+      "mean": 9.9,
+      "std": 4.22
+    },
+    "total_dist": {
+      "mean": 1007.26,
+      "std": 61.29
+    }
+  },
+  "qlearning": {
+    "avg_wait": {
+      "mean": 15.57,
+      "std": 1.86
+    },
+    "surge_wait": {
+      "mean": 20.26,
+      "std": 2.57
+    },
+    "normal_wait": {
+      "mean": 9.48,
+      "std": 1.81
+    },
+    "served": {
+      "mean": 87.38,
+      "std": 6.11
+    },
+    "dropped": {
+      "mean": 10.8,
+      "std": 4.17
+    },
+    "total_dist": {
+      "mean": 1078.48,
+      "std": 55.68
+    }
+  }
+}
