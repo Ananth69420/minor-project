@@ -135,19 +135,44 @@ def evaluate(version="v2", num_eval_episodes=50, save_files=True):
             with open("results_v1.json", "r") as f:
                 v1_results = json.load(f)
 
+        # Load Q-table matrix for Policy Inspector
+        q_table_matrix = np.round(agent.q_table, 2).tolist()
+
+        # Load utilization and candidate experiment data if available
+        exp05_data = None
+        exp05_path = os.path.join("experiments", "exp05_utilization_results.json")
+        if os.path.exists(exp05_path):
+            with open(exp05_path, "r") as f:
+                exp05_data = json.load(f)
+
+        exp06_data = None
+        exp06_path = os.path.join("experiments", "exp06_candidates_results.json")
+        if os.path.exists(exp06_path):
+            with open(exp06_path, "r") as f:
+                exp06_data = json.load(f)
+
         os.makedirs("dashboard", exist_ok=True)
         replay_payload = {
             "results": results,
             "results_v1": v1_results,
             "training": training_data,
+            "q_table": q_table_matrix,
+            "exp05_utilization": exp05_data,
+            "exp06_candidates": exp06_data,
             "baseline_frames": base_replay_frames,
             "rl_frames": rl_replay_frames
         }
 
-        replay_js_content = f"const REPLAY_DATA = {json.dumps(replay_payload)};\n"
+        replay_js_content = f"var REPLAY_DATA = {json.dumps(replay_payload)};\nif (typeof window !== 'undefined') {{ window.REPLAY_DATA = REPLAY_DATA; }}\n"
         with open(os.path.join("dashboard", "replay_data.js"), "w") as f:
             f.write(replay_js_content)
         print("Saved dashboard/replay_data.js")
+
+        # Also write to root directory so D:/Minor Project/index.html can access it
+        root_replay_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "replay_data.js")
+        with open(root_replay_path, "w") as f:
+            f.write(replay_js_content)
+        print(f"Saved {root_replay_path}")
 
     return results
 

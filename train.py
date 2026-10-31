@@ -60,12 +60,11 @@ def run_training(
                 if v.status == "IDLE":
                     # Update previous decision transition if any
                     s = env.encode_state(v.id)
-                    agent.update_on_completion(v.id, next_state=s, done=False)
-
-                    # Select action using epsilon-greedy
-                    a = agent.select_action(s, evaluate=False)
-                    env.dispatch_vehicle(v.id, a)
-                    agent.record_decision(v.id, s, a)
+                    valid_actions = env.valid_actions(v.id)
+                    agent.update_on_completion(v.id, next_state=s, done=False, next_valid_actions=valid_actions)
+                    a = agent.select_action(s, evaluate=False, valid_actions=valid_actions)
+                    if env.dispatch_vehicle(v.id, a):
+                        agent.record_decision(v.id, s, a)
 
             # 2. Advance environment by 1 step
             step_reward, done, info = env.step()
@@ -123,7 +122,7 @@ def run_training(
     print("=" * 70)
     print(f"TRAINING COMPLETED IN {total_training_time:.2f} SECONDS")
     non_zero = np.count_nonzero(agent.q_table)
-    print(f"Trained Q-Table: {non_zero}/{config.NUM_STATES * config.NUM_ACTIONS} state-action pairs explored")
+    print(f"Nonzero Q-table entries: {non_zero}/{config.NUM_STATES * config.NUM_ACTIONS}")
     print(f"Saving Q-table to '{save_q_table_path}'...")
     agent.save(save_q_table_path)
 

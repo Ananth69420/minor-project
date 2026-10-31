@@ -152,39 +152,31 @@ class CityFleetEnv:
         return [r for r in self.all_requests if r.status == "PENDING"]
 
     def encode_state(self, vehicle_id: int) -> int:
-        """
-        Encodes the state for an idle vehicle into an integer in [0, 323].
-        State = vehicle's quadrant (4) x pending-request count bucket per quadrant (0, 1-2, 3+ each -> 81).
-        """
+        """Encode demand phase, surge hotspot, vehicle quadrant and queue buckets."""
         vehicle = self.vehicles[vehicle_id]
-        v_quad = vehicle.quadrant
-
-        # Count unassigned pending requests in each quadrant
-        pending_counts = [0, 0, 0, 0]
+        if self.current_step < config.PRE_SURGE_START_STEP:
+            phase = 0
+        elif self.current_step < config.SURGE_START_STEP:
+            phase = 1
+        elif self.current_step < config.SURGE_END_STEP:
+            phase = 2
+        else:
+            phase = 3
+        counts = [0, 0, 0, 0]
         for req in self.get_unassigned_pending_requests():
-            quad = self.get_quadrant(req.pickup[0], req.pickup[1])
-            pending_counts[quad] += 1
+            counts[self.get_quadrant(*req.pickup)] += 1
+        buckets = [0 if n == 0 else 1 if n <= 2 else 2 for n in counts]
+        bucket_index = buckets[0] * 27 + buckets[1] * 9 + buckets[2] * 3 + buckets[3]
+        return (((phase * 4 + self.surge_quadrant) * 4 + vehicle.quadrant) * 81 + bucket_index)
 
-        # Bucket counts: 0 -> 0, 1..2 -> 1, 3+ -> 2
-        buckets = []
-        for c in pending_counts:
-            if c == 0:
-                buckets.append(0)
-            elif c <= 2:
-                buckets.append(1)
-            else:
-                buckets.append(2)
-
-        # 3^4 = 81 bucket states
-        bucket_index = (
-            buckets[0] * 27 +
-            buckets[1] * 9 +
-            buckets[2] * 3 +
-            buckets[3] * 1
-        )
-
-        state_index = v_quad * 81 + bucket_index
-        return state_index
+    def valid_actions(self, vehicle_id: int) -> np.ndarray:
+        """Mask actions that cannot execute, including repositioning no-ops."""
+        vehicle = self.vehicles[vehicle_id]
+        valid = np.zeros(config.NUM_ACTIONS, dtype=bool)
+        valid[0:2] = bool(self.get_unassigned_pending_requests())
+        for action, center in enumerate(config.QUADRANT_CENTERS, start=2):
+            valid[action] = vehicle.pos != list(center)
+        return valid
 
     def dispatch_vehicle(self, vehicle_id: int, action: int) -> bool:
         """
@@ -416,6 +408,7 @@ class CityFleetEnv:
 
         info = {
             "step": self.current_step,
+            "phase": 0 if self.current_step < config.PRE_SURGE_START_STEP else 1 if self.current_step < config.SURGE_START_STEP else 2 if self.current_step < config.SURGE_END_STEP else 3,
             "dropoffs": self.step_dropoffs,
             "drops": self.step_drops,
             "movement": self.step_movement,
@@ -445,6 +438,10 @@ class CityFleetEnv:
         empty_ratio = (idle_distance / total_distance) if total_distance > 0 else 0.0
         service_rate = (len(completed) / total_spawned * 100.0) if total_spawned > 0 else 0.0
 
+        normal_spawned = [r for r in self.all_requests if not config.SURGE_START_STEP <= r.spawn_step < config.SURGE_END_STEP]
+        normal_completed = [r for r in normal_spawned if r.status == "COMPLETED"]
+        normal_avg_wait = float(np.mean([r.wait_time for r in normal_completed])) if normal_completed else 0.0
+
         # Surge phase specific metrics
         surge_spawned = [r for r in self.all_requests if config.SURGE_START_STEP <= r.spawn_step < config.SURGE_END_STEP]
         surge_completed = [r for r in surge_spawned if r.status == "COMPLETED"]
@@ -459,6 +456,7 @@ class CityFleetEnv:
             "service_rate": round(service_rate, 2),
             "avg_wait_time": round(avg_wait_completed, 2),
             "avg_wait_all": round(avg_wait_all, 2),
+            "normal_avg_wait_time": round(normal_avg_wait, 2),
             "total_distance": total_distance,
             "idle_distance": idle_distance,
             "empty_ratio": round(empty_ratio, 3),
@@ -475,9 +473,14 @@ class CityFleetEnv:
         """Returns a snapshot of the current environment state (used for visualization and debugging)."""
         return {
             "step": self.current_step,
+            "phase": 0 if self.current_step < config.PRE_SURGE_START_STEP else 1 if self.current_step < config.SURGE_START_STEP else 2 if self.current_step < config.SURGE_END_STEP else 3,
             "surge_quadrant": self.surge_quadrant,
             "is_surge": config.SURGE_START_STEP <= self.current_step < config.SURGE_END_STEP,
             "vehicles": [v.to_dict() for v in self.vehicles],
+            "total_requests": len(self.all_requests),
+            "served": sum(1 for r in self.all_requests if r.status == "COMPLETED"),
+            "dropped": sum(1 for r in self.all_requests if r.status == "DROPPED"),
+            "avg_wait_time": round(float(np.mean([r.wait_time for r in self.all_requests if r.status == "COMPLETED"])) if any(r.status == "COMPLETED" for r in self.all_requests) else 0.0, 2),
             "requests": [r.to_dict() for r in self.all_requests if r.status in ("PENDING", "ASSIGNED", "IN_TRANSIT")],
             "cumulative_reward": round(self.cumulative_reward, 2),
         }

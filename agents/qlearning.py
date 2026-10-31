@@ -12,7 +12,7 @@ import config
 class QLearningAgent:
     """
     Tabular Q-Learning Agent with Fleet Parameter Sharing.
-    - State space (324): vehicle quadrant (4) x demand buckets (81)
+    - State space (5,184): phase (4) x hotspot (4) x vehicle quadrant (4) x demand buckets (81)
     - Action space (6):
         0 = Serve Nearest Pending Request
         1 = Serve Longest-Waiting Pending Request
@@ -42,7 +42,7 @@ class QLearningAgent:
         self.epsilon_decay = epsilon_decay
         self.rng = np.random.default_rng(seed)
 
-        # Tabular Q-Table: shape (324, 6)
+        # Tabular Q-Table: shape (5,184, 6)
         # Small random initialization around 0 helps break initial symmetry
         self.q_table = np.zeros((self.num_states, self.num_actions), dtype=np.float64)
 
@@ -50,19 +50,20 @@ class QLearningAgent:
         # vehicle_id -> {"state": int, "action": int, "discounted_reward": float, "duration": int}
         self.active_transitions: Dict[int, Dict[str, Any]] = {}
 
-    def select_action(self, state: int, evaluate: bool = False) -> int:
-        """
-        Epsilon-greedy action selection.
-        If evaluate is True, acts purely greedily (argmax Q).
-        """
-        if not evaluate and (self.rng.random() < self.epsilon):
-            return int(self.rng.integers(0, self.num_actions))
-
-        # Greedy choice with random tie-breaking
-        q_values = self.q_table[state]
-        max_q = np.max(q_values)
-        best_actions = np.flatnonzero(np.isclose(q_values, max_q))
-        return int(self.rng.choice(best_actions))
+    def select_action(
+        self, state: int, evaluate: bool = False,
+        valid_actions: Optional[np.ndarray] = None,
+    ) -> int:
+        """Epsilon-greedy selection over executable actions only."""
+        valid = np.ones(self.num_actions, dtype=bool) if valid_actions is None else np.asarray(valid_actions, dtype=bool)
+        choices = np.flatnonzero(valid)
+        if choices.size == 0:
+            raise ValueError("At least one action must be valid")
+        if not evaluate and self.rng.random() < self.epsilon:
+            return int(self.rng.choice(choices))
+        values = self.q_table[state, choices]
+        best = choices[np.flatnonzero(np.isclose(values, np.max(values)))]
+        return int(self.rng.choice(best))
 
     def record_decision(self, vehicle_id: int, state: int, action: int) -> None:
         """Records the start of a vehicle's dispatch decision."""
@@ -81,7 +82,10 @@ class QLearningAgent:
             trans["discounted_reward"] += discount * reward
             trans["duration"] += 1
 
-    def update_on_completion(self, vehicle_id: int, next_state: int, done: bool = False) -> Optional[float]:
+    def update_on_completion(
+        self, vehicle_id: int, next_state: int, done: bool = False,
+        next_valid_actions: Optional[np.ndarray] = None,
+    ) -> Optional[float]:
         """
         Updates the shared Q-table when a vehicle completes its mission or becomes idle.
         Returns the TD error (for monitoring), or None if no active transition.
@@ -100,7 +104,8 @@ class QLearningAgent:
         if done:
             target = g
         else:
-            best_next_q = np.max(self.q_table[next_state])
+            valid = np.ones(self.num_actions, dtype=bool) if next_valid_actions is None else np.asarray(next_valid_actions, dtype=bool)
+            best_next_q = np.max(self.q_table[next_state, valid]) if np.any(valid) else 0.0
             target = g + (self.gamma ** dt) * best_next_q
 
         td_error = target - current_q

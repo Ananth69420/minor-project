@@ -34,6 +34,7 @@ QUADRANT_CENTERS = [
 NORMAL_DEMAND_PROB = 0.20       # Probability of request spawn per step in normal phase
 SURGE_DEMAND_PROB = 0.60        # 3x rate in surge phase
 SURGE_START_STEP = 100
+PRE_SURGE_START_STEP = 80
 SURGE_END_STEP = 200
 SURGE_HOTSPOT_CONCENTRATION = 0.75  # 75% of surge requests originate in the surge quadrant
 
@@ -48,18 +49,18 @@ PENALTY_DROPPED = -20.0         # Severe penalty for passenger cancellation / dr
 # ==========================================
 # Q-Learning Hyperparameters
 # ==========================================
-# State space: 4 vehicle quadrants * 81 demand bucket combinations = 324 states
+# State space: 4 phases * 4 hotspots * 4 vehicle quadrants * 81 demand bucket combinations = 5,184 states
 # Actions: 0 = Nearest, 1 = Longest Waiting, 2..5 = Reposition to Quadrant 0..3 center
-NUM_STATES = 324
+NUM_STATES = 5184
 NUM_ACTIONS = 6
 
 LEARNING_RATE = 0.10            # Alpha
 DISCOUNT_FACTOR = 0.95          # Gamma
 EPSILON_START = 1.00            # Initial exploration rate
 EPSILON_MIN = 0.05              # Minimum exploration rate
-EPSILON_DECAY = 0.9985          # Decay rate per training episode
+EPSILON_DECAY = 0.9995          # Decay rate per training episode
 
 # Training & Evaluation Settings
-NUM_TRAIN_EPISODES = 2500       # Sufficient for tabular convergence (< 15 seconds)
+NUM_TRAIN_EPISODES = 10000       # Sufficient for tabular convergence (< 15 seconds)
 NUM_EVAL_EPISODES = 50          # Statistical sample size for fair comparison
 RANDOM_SEED = 42                # Base seed for reproducibility

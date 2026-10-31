@@ -38,7 +38,8 @@ def evaluate_policy(
             if v.status == "IDLE":
                 if agent_type == "qlearning":
                     s = env.encode_state(v.id)
-                    a = q_agent.select_action(s, evaluate=True)
+                    valid_actions = env.valid_actions(v.id)
+                    a = q_agent.select_action(s, evaluate=True, valid_actions=valid_actions)
                     env.dispatch_vehicle(v.id, a)
                 elif agent_type == "baseline":
                     a = baseline_agent.select_action(env, v.id)
@@ -152,7 +153,7 @@ def run_benchmark(
         }
 
     keys = [
-        "avg_wait_time", "avg_wait_all", "requests_served", "requests_dropped",
+        "avg_wait_time", "avg_wait_all", "normal_avg_wait_time", "requests_served", "requests_dropped",
         "service_rate", "total_distance", "idle_distance", "empty_ratio",
         "total_reward", "surge_service_rate", "surge_avg_wait"
     ]
@@ -208,6 +209,7 @@ def run_benchmark(
             "surge_start": config.SURGE_START_STEP,
             "surge_end": config.SURGE_END_STEP,
             "num_eval_episodes": num_episodes,
+            "evaluation_seed": seed,
         },
         "summary": {
             "baseline": summary_baseline,

@@ -355,7 +355,11 @@ class CityEnv:
         }
 
     def get_frame(self):
-        # Snapshot of current state for replay
+        served_count = sum(1 for r in self.requests if r["status"] == "completed")
+        dropped_count = sum(1 for r in self.requests if r["status"] == "dropped")
+        completed_waits = [r["wait"] for r in self.requests if r["status"] == "completed"]
+        cur_avg_wait = round(float(np.mean(completed_waits)), 2) if completed_waits else 0.0
+
         return {
             "step": self.step_num,
             "phase": self.get_phase(),
@@ -363,12 +367,18 @@ class CityEnv:
             "is_surge": (100 <= self.step_num < 200),
             "grid_size": self.grid_size,
             "num_vehicles": self.num_vehicles,
+            "served": served_count,
+            "dropped": dropped_count,
+            "avg_wait": cur_avg_wait,
             "vehicles": [
                 {
                     "id": v["id"],
                     "x": v["x"],
                     "y": v["y"],
-                    "status": v["status"]
+                    "status": v["status"],
+                    "target_x": v["target_x"],
+                    "target_y": v["target_y"],
+                    "req_id": v["req_id"]
                 }
                 for v in self.vehicles
             ],
@@ -377,7 +387,11 @@ class CityEnv:
                     "id": r["id"],
                     "px": r["px"],
                     "py": r["py"],
-                    "wait": r["wait"]
+                    "dx": r["dx"],
+                    "dy": r["dy"],
+                    "wait": r["wait"],
+                    "status": r["status"],
+                    "assigned_vehicle": r["assigned_vehicle"]
                 }
                 for r in self.requests
                 if r["status"] in ("pending", "assigned")
