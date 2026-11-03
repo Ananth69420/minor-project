@@ -4,9 +4,7 @@ for Autonomous Fleet Management in Urban Mobility.
 All parameters, hyper-parameters, and seeds are centralized here.
 """
 
-# ==========================================
-# City Grid & Fleet Parameters
-# ==========================================
+# City grid and fleet parameters.
 GRID_SIZE = 10                  # 10x10 city grid
 NUM_VEHICLES = 4                # Default autonomous fleet size
 EPISODE_STEPS = 300             # Time steps per episode (1 step = 1 grid move)
@@ -24,9 +22,7 @@ QUADRANT_CENTERS = [
     (7, 7),  # SE (3)
 ]
 
-# ==========================================
-# Demand & Surge Schedule
-# ==========================================
+# Demand and surge schedule.
 # Episode Timeline:
 # Phase 1: Steps 0..99    -> Normal demand
 # Phase 2: Steps 100..199 -> Surge demand (3x rate, concentrated in hotspot quadrant)
@@ -38,17 +34,13 @@ PRE_SURGE_START_STEP = 80
 SURGE_END_STEP = 200
 SURGE_HOTSPOT_CONCENTRATION = 0.75  # 75% of surge requests originate in the surge quadrant
 
-# ==========================================
-# Reward Function
-# ==========================================
+# Reward function.
 REWARD_DROPOFF = 20.0           # Positive reward per successful passenger dropoff
 PENALTY_WAIT_STEP = -0.10       # Negative per step for every pending request
 PENALTY_DISTANCE = -0.05        # Fuel / wear penalty per unit distance travelled
 PENALTY_DROPPED = -20.0         # Severe penalty for passenger cancellation / dropped request
 
-# ==========================================
-# Q-Learning Hyperparameters
-# ==========================================
+# Q-learning hyperparameters.
 # State space: 4 phases * 4 hotspots * 4 vehicle quadrants * 81 demand bucket combinations = 5,184 states
 # Actions: 0 = Nearest, 1 = Longest Waiting, 2..5 = Reposition to Quadrant 0..3 center
 NUM_STATES = 5184
@@ -61,6 +53,6 @@ EPSILON_MIN = 0.05              # Minimum exploration rate
 EPSILON_DECAY = 0.9995          # Decay rate per training episode
 
 # Training & Evaluation Settings
-NUM_TRAIN_EPISODES = 10000       # Sufficient for tabular convergence (< 15 seconds)
+NUM_TRAIN_EPISODES = 10000       # Episodes in the standard training run
 NUM_EVAL_EPISODES = 50          # Statistical sample size for fair comparison
 RANDOM_SEED = 42                # Base seed for reproducibility

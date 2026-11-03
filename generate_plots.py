@@ -251,16 +251,7 @@ def plot_policy_heatmap(
 
     q_table = np.load(q_table_path)
 
-    # Select representative states for presentation to college examiners:
-    # We will pick 8 key states:
-    # 1. State 0: Vehicle in Q0, all demand 0 (Quiet normal)
-    # 2. State 1: Vehicle in Q0, demand in Q3 is 1..2
-    # 3. State 2: Vehicle in Q0, demand in Q3 is 3+ (Surge opposite corner)
-    # 4. State 6: Vehicle in Q0, demand in Q2 is 3+ (Surge south)
-    # 5. State 18: Vehicle in Q0, demand in Q1 is 3+ (Surge east)
-    # 6. State 54: Vehicle in Q0, demand in Q0 is 3+ (Surge local)
-    # 7. State 162: Vehicle in Q2, demand in Q2 is 3+ (Vehicle inside surge hotspot)
-    # 8. State 243: Vehicle in Q3, demand in Q2 is 3+ (Vehicle adjacent to surge)
+    # Sample quiet, local-demand, and hotspot states from each quadrant.
     state_indices = [0, 2, 6, 18, 54, 87, 162, 243]
     state_labels = [
         "V@Q0 | All 0s (Quiet)",

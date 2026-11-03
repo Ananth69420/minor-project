@@ -3,62 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FleetOps AI - Autonomous Mobility Fleet Operations & RL Dispatch</title>
-  <!-- Google Fonts: Inter & JetBrains Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <title>Fleet Dispatch Lab · Urban Mobility Simulation</title>
   <!-- Chart.js from cdnjs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <!-- Real simulation data source -->
   <script src="replay_data.js"></script>
 
   <style>
-    /* ==========================================================================
-       DESIGN SYSTEM & THEME TOKENS
-       ========================================================================== */
+    /* Design system and theme tokens */
     :root {
-      --bg-app: #080d1a;
-      --bg-sidebar: #0c1426;
-      --bg-card: #111b33;
-      --bg-card-hover: #162444;
-      --bg-surface: #182849;
-      --bg-input: #0a1122;
-      --border-subtle: #1e2f4d;
-      --border-medium: #2a3f66;
-      --border-bright: #3b82f6;
+      --bg-app: #f2f3ef;
+      --bg-sidebar: #e8eae4;
+      --bg-card: #fbfcf9;
+      --bg-card-hover: #f0f2ed;
+      --bg-surface: #e9ece6;
+      --bg-input: #ffffff;
+      --border-subtle: #d9ded6;
+      --border-medium: #c4ccc2;
+      --border-bright: #5b806f;
 
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      --text-tertiary: #64748b;
-      --text-muted: #475569;
+      --text-primary: #202a25;
+      --text-secondary: #526158;
+      --text-tertiary: #68766d;
+      --text-muted: #929b93;
 
-      --accent-blue: #3b82f6;
-      --accent-blue-hover: #2563eb;
-      --accent-blue-subtle: rgba(59, 130, 246, 0.15);
+      --accent-blue: #527c6b;
+      --accent-blue-hover: #416957;
+      --accent-blue-subtle: rgba(82, 124, 107, 0.12);
       
-      --accent-emerald: #10b981;
-      --accent-emerald-subtle: rgba(16, 185, 129, 0.15);
+      --accent-emerald: #3b744e;
+      --accent-emerald-subtle: rgba(71, 132, 91, 0.12);
       
-      --accent-amber: #f59e0b;
-      --accent-amber-subtle: rgba(245, 158, 11, 0.15);
+      --accent-amber: #98672c;
+      --accent-amber-subtle: rgba(173, 120, 50, 0.12);
       
-      --accent-red: #ef4444;
-      --accent-red-subtle: rgba(239, 68, 68, 0.15);
+      --accent-red: #b6534b;
+      --accent-red-subtle: rgba(182, 83, 75, 0.12);
       
-      --accent-purple: #8b5cf6;
-      --accent-purple-subtle: rgba(139, 92, 246, 0.15);
+      --accent-purple: #76688c;
+      --accent-purple-subtle: rgba(118, 104, 140, 0.12);
 
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      --font-mono: 'JetBrains Mono', "SFMono-Regular", Consolas, monospace;
+      --font-sans: 'Aptos', 'Segoe UI', sans-serif;
+      --font-mono: 'Cascadia Code', Consolas, monospace;
+      color-scheme: light;
 
       --sidebar-width: 240px;
       --sidebar-collapsed-width: 68px;
       --header-height: 64px;
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-      --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+      --radius-sm: 5px;
+      --radius-md: 8px;
+      --radius-lg: 11px;
+      --shadow-card: 0 1px 3px rgba(32, 42, 37, 0.06), 0 5px 18px rgba(32, 42, 37, 0.035);
     }
 
     * {
@@ -94,9 +89,7 @@
       background: var(--text-tertiary);
     }
 
-    /* ==========================================================================
-       SIDEBAR NAVIGATION
-       ========================================================================== */
+    /* Sidebar navigation */
     aside.sidebar {
       width: var(--sidebar-width);
       background-color: var(--bg-sidebar);
@@ -134,7 +127,7 @@
     .brand-icon {
       width: 32px;
       height: 32px;
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      background: var(--accent-blue);
       border-radius: 8px;
       display: flex;
       align-items: center;
@@ -143,7 +136,7 @@
       font-weight: 700;
       font-size: 15px;
       letter-spacing: -0.5px;
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+      box-shadow: none;
       flex-shrink: 0;
     }
 
@@ -326,9 +319,7 @@
       100% { opacity: 0.4; transform: scale(0.9); }
     }
 
-    /* ==========================================================================
-       MAIN APP WRAPPER & HEADER
-       ========================================================================== */
+    /* Main app wrapper and header */
     .app-main {
       flex: 1;
       display: flex;
@@ -467,9 +458,7 @@
       outline: none;
     }
 
-    /* ==========================================================================
-       VIEWPORT & SECTIONS
-       ========================================================================== */
+    /* Viewport and sections */
     .content-viewport {
       flex: 1;
       overflow-y: auto;
@@ -521,9 +510,7 @@
       color: var(--text-tertiary);
     }
 
-    /* ==========================================================================
-       TOP KPI STRIP
-       ========================================================================== */
+    /* Top kpi strip */
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -605,11 +592,9 @@
     .kpi-delta.good { background: var(--accent-emerald-subtle); color: var(--accent-emerald); }
     .kpi-delta.warn { background: var(--accent-amber-subtle); color: var(--accent-amber); }
 
-    /* ==========================================================================
-       OPERATIONAL STATUS STRIP
-       ========================================================================== */
+    /* Operational status strip */
     .ops-banner {
-      background: linear-gradient(90deg, #111e3b 0%, var(--bg-card) 100%);
+      background: var(--bg-card);
       border: 1px solid var(--border-medium);
       border-radius: var(--radius-md);
       padding: 12px 18px;
@@ -667,9 +652,7 @@
       gap: 6px;
     }
 
-    /* ==========================================================================
-       MAP & SIMULATION VIEWPORT (LIVE FLEET SHOWPIECE)
-       ========================================================================== */
+    /* Map and simulation viewport (live fleet showpiece) */
     .map-operations-grid {
       display: grid;
       grid-template-columns: 1fr 340px;
@@ -684,7 +667,7 @@
     }
 
     .map-wrapper {
-      background: #091122;
+      background: #f6f7f3;
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
       overflow: hidden;
@@ -742,7 +725,7 @@
 
     .canvas-container {
       position: relative;
-      background: #091122;
+      background: #f6f7f3;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -751,11 +734,11 @@
     }
 
     canvas#fleetCanvas, canvas#overviewCanvas {
-      background: #0b152b;
+      background: #e8ece6;
       border: 1px solid var(--border-medium);
       border-radius: var(--radius-sm);
       cursor: crosshair;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 2px 10px rgba(32, 42, 37, 0.1);
       display: block;
     }
 
@@ -882,9 +865,7 @@
       color: var(--text-primary);
     }
 
-    /* ==========================================================================
-       POLICY INSPECTOR (LEARNED Q-TABLE MATRIX)
-       ========================================================================== */
+    /* Policy inspector (learned q-table matrix) */
     .inspector-layout {
       display: grid;
       grid-template-columns: 340px 1fr;
@@ -1016,10 +997,7 @@
       background: rgba(255, 255, 255, 0.02);
     }
 
-    tr.action-greedy {
-      background: rgba(59, 130, 246, 0.08) !important;
-      border-left: 3px solid var(--accent-blue);
-    }
+    tr.action-greedy { background: var(--accent-blue-subtle) !important; }
 
     .q-val-bar-wrapper {
       display: flex;
@@ -1073,9 +1051,7 @@
       font-weight: 600;
     }
 
-    /* ==========================================================================
-       ANALYTICS & CHARTS
-       ========================================================================== */
+    /* Analytics and charts */
     .analytics-grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1094,9 +1070,7 @@
       width: 100%;
     }
 
-    /* ==========================================================================
-       DEMAND & DISPATCH PANELS
-       ========================================================================== */
+    /* Demand and dispatch panels */
     .phase-timeline-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -1149,23 +1123,256 @@
       color: var(--text-secondary);
       line-height: 1.4;
     }
+
+    /* Live computational engine and simulator controls */
+    .live-control-toolbar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-medium);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .live-tool-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .live-status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      border: 1px solid var(--border-medium);
+      background: var(--bg-surface);
+      cursor: pointer;
+    }
+
+    .live-status-pill.online {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+    }
+
+    .live-status-pill.offline {
+      border-color: rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.12);
+      color: #fbbf24;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .live-dot.pulse {
+      box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+      animation: livePulse 2s infinite;
+    }
+
+    @keyframes livePulse {
+      0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+    }
+
+    .live-input-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+    }
+
+    .live-input-item select, .live-input-item input {
+      background: var(--bg-input);
+      border: 1px solid var(--border-medium);
+      color: var(--text-primary);
+      border-radius: var(--radius-sm);
+      padding: 4px 8px;
+      font-size: 11.5px;
+      font-family: inherit;
+    }
+
+    .live-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-medium);
+      color: var(--text-primary);
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .live-btn:hover {
+      background: var(--border-medium);
+      border-color: var(--border-bright);
+    }
+
+    .live-btn.primary {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue-hover);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+    }
+
+    .live-btn.primary:hover {
+      background: var(--accent-blue-hover);
+    }
+
+    .live-btn.accent {
+      background: rgba(139, 92, 246, 0.2);
+      border-color: var(--accent-purple);
+      color: #c084fc;
+    }
+
+    .live-btn.accent:hover {
+      background: rgba(139, 92, 246, 0.35);
+    }
+
+    .live-speed-group {
+      display: flex;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .speed-btn {
+      background: var(--bg-surface);
+      border: none;
+      color: var(--text-secondary);
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border-right: 1px solid var(--border-medium);
+    }
+
+    .speed-btn:last-child {
+      border-right: none;
+    }
+
+    .speed-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-card-hover);
+    }
+
+    .speed-btn.active {
+      background: var(--accent-blue);
+      color: #ffffff;
+    }
+
+    /* Modal Overlay & Dialog */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(29, 39, 33, 0.58);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-dialog {
+      background: var(--bg-card);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius-md);
+      box-shadow: 0 12px 36px rgba(32, 42, 37, 0.18);
+      width: 90%;
+      max-width: 900px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .modal-close-btn {
+      background: none;
+      border: none;
+      color: var(--text-tertiary);
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-close-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: var(--bg-surface);
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent-blue);
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <!-- ==========================================================================
-       SIDEBAR NAVIGATION
-       ========================================================================== -->
+  <!-- Sidebar navigation -->
   <aside class="sidebar" id="sidebar">
     <div class="brand-container">
       <div class="brand-logo" onclick="switchNav('overview');">
         <div class="brand-icon">F</div>
         <div class="brand-text">
           <div class="brand-title">
-            FleetOps AI
-            <span class="brand-badge">V2.4</span>
+            FleetOps
+            <span class="brand-badge">V2</span>
           </div>
-          <div class="brand-sub">Autonomous Mobility RL</div>
+          <div class="brand-sub">Urban mobility simulation</div>
         </div>
       </div>
       <button class="collapse-btn" id="collapseBtn" title="Toggle Sidebar">
@@ -1248,7 +1455,7 @@
       <div class="footer-pill">
         <div style="display:flex; align-items:center; gap:6px;">
           <div class="pulse-dot"></div>
-          <span>Central Dispatch AI</span>
+          <span>Fleet dispatch</span>
         </div>
         <span style="font-family:var(--font-mono); font-weight:600; color:var(--text-primary);">ONLINE</span>
       </div>
@@ -1258,9 +1465,7 @@
     </div>
   </aside>
 
-  <!-- ==========================================================================
-       MAIN CONTENT APPLICATION SHELL
-       ========================================================================== -->
+  <!-- Main content application shell -->
   <main class="app-main">
     
     <!-- Top Header Bar -->
@@ -1309,12 +1514,73 @@
       </div>
     </header>
 
+    <!-- Live computational simulation control bar -->
+    <div class="live-control-toolbar" id="liveControlToolbar">
+      <div class="live-tool-group">
+        <div class="live-status-pill offline" id="liveBackendStatus" title="Click to test live backend connection" onclick="initLiveBackend(true)">
+          <span class="live-dot" id="liveStatusDot"></span>
+          <span id="liveStatusLabel">Connecting to simulation…</span>
+        </div>
+
+        <div class="live-input-item">
+          <label><strong>Dispatcher:</strong></label>
+          <select id="selLiveDispatcher" onchange="onLiveDispatcherChange(this.value)">
+            <option value="rl">Tabular Q-Learning (V2)</option>
+            <option value="baseline">Nearest-Vehicle Baseline</option>
+            <option value="rule">Forecast-Aware Rule</option>
+          </select>
+        </div>
+
+        <div class="live-input-item">
+          <label><strong>Mode:</strong></label>
+          <select id="selLiveMode" onchange="onLiveModeChange(this.value)">
+            <option value="inference">Mode A: Trained Model (Inference)</option>
+            <option value="training">Mode B: Training Mode (Online Updates)</option>
+          </select>
+        </div>
+
+        <div class="live-input-item">
+          <label><strong>Surge Hotspot:</strong></label>
+          <select id="selLiveHotspot" onchange="onLiveHotspotChange(this.value)">
+            <option value="0">Q0: North-West</option>
+            <option value="1">Q1: North-East</option>
+            <option value="2">Q2: South-West</option>
+            <option value="3">Q3: South-East</option>
+          </select>
+        </div>
+
+        <div class="live-input-item">
+          <label><strong>Seed:</strong></label>
+          <input type="number" id="inpLiveSeed" value="5000" style="width:68px;" onchange="onLiveSeedChange(this.value)" />
+        </div>
+      </div>
+
+      <div class="live-tool-group">
+        <button class="live-btn primary" id="btnLiveStep" onclick="handleLiveStep()" title="Execute exactly ONE simulation timestep in Python simulator">
+          <strong>&#9654;&#10073; STEP (+1 Timestep)</strong>
+        </button>
+        <button class="live-btn" id="btnLivePlay" onclick="handleLivePlayToggle()">
+          <span id="livePlayIcon">&#9658;</span> <span id="livePlayText">Live Play</span>
+        </button>
+        <button class="live-btn" id="btnLiveReset" onclick="handleLiveReset()" title="Reset simulation to step 0">
+          &#8634; Reset
+        </button>
+        <div class="live-speed-group">
+          <button class="speed-btn active" id="spd1" onclick="handleLiveSpeed(1.0)">1&times;</button>
+          <button class="speed-btn" id="spd2" onclick="handleLiveSpeed(2.0)">2&times;</button>
+          <button class="speed-btn" id="spd5" onclick="handleLiveSpeed(5.0)">5&times;</button>
+          <button class="speed-btn" id="spd10" onclick="handleLiveSpeed(10.0)">10&times;</button>
+        </div>
+        <button class="live-btn accent" id="btnLiveCompare" onclick="openComparisonModal()" title="Run head-to-head comparison under identical seed">
+          &#9876; Compare Baseline vs RL
+        </button>
+      </div>
+    </div>
+
     <!-- Viewport Container -->
     <div class="content-viewport">
 
-      <!-- ====================================================================
-           SECTION 1: OVERVIEW
-           ==================================================================== -->
+      <!-- Section 1: overview -->
       <section class="view-section active" id="sec-overview">
         <!-- KPI Strip -->
         <div class="kpi-grid">
@@ -1506,9 +1772,7 @@
         </div>
       </section>
 
-      <!-- ====================================================================
-           SECTION 2: LIVE FLEET (MAP-FIRST SHOWPIECE)
-           ==================================================================== -->
+      <!-- Section 2: live fleet (map-first showpiece) -->
       <section class="view-section" id="sec-live-fleet">
         <div class="card" style="padding:14px 18px;">
           <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
@@ -1592,6 +1856,83 @@
               </div>
             </div>
 
+            <!-- Dedicated real-time q-learning decision inspector -->
+            <div class="card" id="liveDecisionInspectorCard">
+              <div class="card-header" style="padding-bottom:8px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+                  <div>
+                    <span class="card-title" style="color:var(--accent-emerald);">Real-Time Q-Learning Decision Inspector</span>
+                    <span class="card-desc" id="liveDecisionVehSubtitle">Agent State & Action Values for Selected Vehicle</span>
+                  </div>
+                  <span class="status-tag" id="liveDecisionModeBadge" style="background:var(--accent-blue-subtle); color:var(--accent-blue);">RL ACTIVE</span>
+                </div>
+              </div>
+
+              <!-- State Breakdown Badges -->
+              <div style="background:var(--bg-surface); padding:10px; border-radius:var(--radius-sm); margin-bottom:10px; font-size:11.5px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                  <span style="color:var(--text-secondary)">State Representation:</span>
+                  <strong style="font-family:var(--font-mono); color:var(--accent-blue); font-size:13px;" id="liveInspStateId">State #198</strong>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:11px;">
+                  <div>&bull; Veh Quad: <strong id="liveInspVehQuad" style="color:var(--text-primary)">Q1 (NE)</strong></div>
+                  <div>&bull; Demand Phase: <strong id="liveInspPhase" style="color:var(--text-primary)">Phase 1 (Pre-Surge)</strong></div>
+                  <div>&bull; Surge Hotspot: <strong id="liveInspHotspot" style="color:var(--accent-amber)">Q2 (SW)</strong></div>
+                  <div>&bull; Own Zone Queue: <strong id="liveInspOwnQueue" style="color:var(--text-primary)">0 reqs</strong></div>
+                  <div>&bull; Hotspot Queue: <strong id="liveInspHotspotQueue" style="color:var(--text-primary)">0 reqs</strong></div>
+                  <div>&bull; Last Action: <strong id="liveInspChosenAction" style="color:var(--accent-emerald)">Repo Q2 Centroid</strong></div>
+                </div>
+              </div>
+
+              <!-- Available Actions & Q-Values Table -->
+              <div style="overflow-x:auto; margin-bottom:10px;">
+                <table class="data-table" style="font-size:11px;">
+                  <thead>
+                    <tr>
+                      <th style="padding:4px 6px;">Act</th>
+                      <th style="padding:4px 6px;">Action Name</th>
+                      <th style="padding:4px 6px;">Learned Q</th>
+                      <th style="padding:4px 6px;">Mask</th>
+                      <th style="padding:4px 6px;">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="liveInspQTableBody">
+                    <!-- Populated dynamically from live backend -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- SMDP Transition Details (Online Training Mode) -->
+              <div id="liveTransitionDetailsBox" style="display:none; background:rgba(139, 92, 246, 0.1); border:1px solid rgba(139, 92, 246, 0.3); border-radius:var(--radius-sm); padding:8px 10px; font-size:11px;">
+                <div style="font-weight:600; color:var(--accent-purple); margin-bottom:4px;">Online SMDP Bellman Update (&alpha; = 0.05, &gamma; = 0.96)</div>
+                <div id="liveTransitionDetailsContent" style="color:var(--text-secondary); font-family:var(--font-mono); font-size:10.5px;"></div>
+              </div>
+            </div>
+
+            <!-- Recent fleet dispatch decisions stream -->
+            <div class="card" id="liveRecentDecisionsCard">
+              <div class="card-header" style="padding-bottom:6px;">
+                <span class="card-title">Recent Fleet Decisions Stream</span>
+                <span class="card-desc">Live decisions logged across all 8 vehicles</span>
+              </div>
+              <div style="max-height:160px; overflow-y:auto;">
+                <table class="data-table" style="font-size:10.5px;">
+                  <thead>
+                    <tr>
+                      <th style="padding:4px 6px;">Step</th>
+                      <th style="padding:4px 6px;">AV</th>
+                      <th style="padding:4px 6px;">Action Selected</th>
+                      <th style="padding:4px 6px;">Method</th>
+                      <th style="padding:4px 6px;">Reward</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recentDecisionsBody">
+                    <tr><td colspan="5" style="text-align:center; color:var(--text-tertiary); padding:8px;">No decisions executed yet. Click STEP or Play.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             <!-- Vehicle Fleet Roster -->
             <div class="card">
               <div class="card-header">
@@ -1627,9 +1968,7 @@
         </div>
       </section>
 
-      <!-- ====================================================================
-           SECTION 3: DISPATCH & REQUESTS
-           ==================================================================== -->
+      <!-- Section 3: dispatch and requests -->
       <section class="view-section" id="sec-dispatch">
         <div class="kpi-grid">
           <div class="kpi-card amber">
@@ -1722,9 +2061,7 @@
         </div>
       </section>
 
-      <!-- ====================================================================
-           SECTION 4: DEMAND FORECAST
-           ==================================================================== -->
+      <!-- Section 4: demand forecast -->
       <section class="view-section" id="sec-forecast">
         <div class="card">
           <div class="card-header">
@@ -1805,9 +2142,7 @@
         </div>
       </section>
 
-      <!-- ====================================================================
-           SECTION 5: PERFORMANCE ANALYTICS
-           ==================================================================== -->
+      <!-- Section 5: performance analytics -->
       <section class="view-section" id="sec-analytics">
         <div class="card">
           <div class="card-header">
@@ -1903,7 +2238,7 @@
                   <td><strong>Surge Waiting Time (RL vs Baseline)</strong></td>
                   <td>20.26 &plusmn; 2.57 vs 20.11 &plusmn; 2.55 (RL lost)</td>
                   <td>16.32 &plusmn; 2.51 vs 17.15 &plusmn; 2.74 (RL won by 0.83 steps)</td>
-                  <td>RL achieves clear, statistically robust advantage during demand surges</td>
+                  <td>RL reduced mean surge wait in this sample; the table does not show a significance test.</td>
                 </tr>
               </tbody>
             </table>
@@ -1911,9 +2246,7 @@
         </div>
       </section>
 
-      <!-- ====================================================================
-           SECTION 6: RL TRAINING
-           ==================================================================== -->
+      <!-- Section 6: rl training -->
       <section class="view-section" id="sec-rl-training">
         <div class="kpi-grid">
           <div class="kpi-card blue">
@@ -2009,9 +2342,7 @@
         </div>
       </section>
 
-      <!-- ====================================================================
-           SECTION 7: LEARNED Q-TABLE POLICY INSPECTOR (MATCHES SCREENSHOT!)
-           ==================================================================== -->
+      <!-- Section 7: learned q-table policy inspector (matches screenshot!) -->
       <section class="view-section" id="sec-policy-inspector">
         <div class="card" style="padding:14px 18px;">
           <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
@@ -2148,9 +2479,7 @@
         </div>
       </section>
 
-      <!-- ====================================================================
-           SECTION 8: EXPERIMENTS & RESULTS
-           ==================================================================== -->
+      <!-- Section 8: experiments and results -->
       <section class="view-section" id="sec-experiments">
         <div class="card">
           <div class="card-header">
@@ -2184,7 +2513,7 @@
                   <td><strong>Exp 02</strong></td>
                   <td>Forecast Feature Expansion</td>
                   <td>Add phase and hotspot forecast to state space (4&times;81 &rarr; 576 states)</td>
-                  <td>State space successfully factorized; agent learned repositioning.</td>
+                  <td>Added phase and hotspot features; repositioning appeared in the learned policy.</td>
                   <td>Agent attempts pre-positioning, but still tied baseline in evaluation.</td>
                 </tr>
                 <tr>
@@ -2241,19 +2570,19 @@
             <span class="card-desc">Proof of saturation in V1 environment</span>
           </div>
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
-            <div style="background:var(--bg-surface); padding:16px; border-radius:var(--radius-sm); border-left:3px solid var(--accent-red);">
+            <div style="background:var(--bg-surface); padding:16px; border-radius:var(--radius-sm); border:1px solid var(--border-subtle);">
               <div style="font-size:11px; color:var(--text-tertiary); text-transform:uppercase;">V1 Surge Demand vs Capacity</div>
               <div style="font-family:var(--font-mono); font-size:20px; font-weight:700; color:#f87171; margin:6px 0;">0.608 vs 0.374</div>
               <div style="font-size:11px; color:var(--text-secondary);">Demand arrival rate exceeded maximum fleet servicing capacity by 62.5%.</div>
             </div>
 
-            <div style="background:var(--bg-surface); padding:16px; border-radius:var(--radius-sm); border-left:3px solid var(--accent-amber);">
+            <div style="background:var(--bg-surface); padding:16px; border-radius:var(--radius-sm); border:1px solid var(--border-subtle);">
               <div style="font-size:11px; color:var(--text-tertiary); text-transform:uppercase;">V1 Surge All-Vehicles Busy</div>
               <div style="font-family:var(--font-mono); font-size:20px; font-weight:700; color:var(--accent-amber); margin:6px 0;">96.8% of Steps</div>
               <div style="font-size:11px; color:var(--text-secondary);">All 4 vehicles were continuously occupied with active trips, leaving zero idle vehicles.</div>
             </div>
 
-            <div style="background:var(--bg-surface); padding:16px; border-radius:var(--radius-sm); border-left:3px solid var(--accent-emerald);">
+            <div style="background:var(--bg-surface); padding:16px; border-radius:var(--radius-sm); border:1px solid var(--border-subtle);">
               <div style="font-size:11px; color:var(--text-tertiary); text-transform:uppercase;">V2 Restored Operational Slack</div>
               <div style="font-family:var(--font-mono); font-size:20px; font-weight:700; color:var(--accent-emerald); margin:6px 0;">18.4% Idle Slack</div>
               <div style="font-size:11px; color:var(--text-secondary);">8 vehicles on 16&times;16 grid provide sufficient elasticity for proactive dispatch.</div>
@@ -2265,9 +2594,7 @@
     </div>
   </main>
 
-  <!-- ==========================================================================
-       JAVASCRIPT LOGIC & VISUALIZATION ENGINE
-       ========================================================================== -->
+  <!-- Javascript logic and visualization engine -->
   <script>
     // State management
     let currentNav = 'overview';
@@ -2280,11 +2607,28 @@
     let selectedVehicleId = 0;
     let showRouteVectors = true;
 
-    // Robust REPLAY_DATA accessor
+    // Live Engine State & WebSocket Management
+    let isLiveMode = false;
+    let liveWs = null;
+    let liveApiBase = /^https?:$/.test(window.location.protocol) ? window.location.origin : 'http://localhost:8000';
+    let liveWsUrl = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + (window.location.host || 'localhost:8000') + '/ws';
+    let currentLiveState = null;
+    let currentComparisonData = null;
+
+    // Replay data is optional when the live service is running.
     function getReplayData() {
       if (typeof window !== 'undefined' && window.REPLAY_DATA) return window.REPLAY_DATA;
       if (typeof REPLAY_DATA !== 'undefined') return REPLAY_DATA;
       return null;
+    }
+
+    function getCurrentFrame() {
+      if (isLiveMode && currentLiveState) {
+        return currentLiveState;
+      }
+      const frames = getFrames();
+      if (!frames || frames.length === 0) return null;
+      return frames[currentStep] || frames[0];
     }
 
     // References to canvases and charts
@@ -2314,11 +2658,11 @@
       if (fleetCanvas) {
         fleetCanvas.addEventListener('click', handleCanvasClick);
       }
-    });
 
-    // ==========================================================================
-    // SIDEBAR & NAVIGATION
-    // ==========================================================================
+      // Connect to the simulator when the dashboard is served by the backend.
+      initLiveBackend();
+    });
+    // Sidebar and navigation
     function initSidebar() {
       const collapseBtn = document.getElementById('collapseBtn');
       const sidebar = document.getElementById('sidebar');
@@ -2351,7 +2695,7 @@
       };
       const titleElem = document.getElementById('pageTitleText');
       if (titleElem) {
-        titleElem.textContent = titles[navKey] || 'FleetOps AI';
+        titleElem.textContent = titles[navKey] || 'Fleet Dispatch Lab';
       }
 
       // Re-render canvas if navigating to map
@@ -2373,10 +2717,483 @@
         if (chartWaitConvergence) chartWaitConvergence.resize();
       }
     }
+    // Live simulation connection
+    function initLiveBackend(isManualCheck = false) {
+      const statusPill = document.getElementById('liveBackendStatus');
+      const statusDot = document.getElementById('liveStatusDot');
+      const statusLabel = document.getElementById('liveStatusLabel');
 
-    // ==========================================================================
-    // SIMULATION PLAYBACK ENGINE
-    // ==========================================================================
+      if (statusLabel) statusLabel.textContent = 'Connecting to Python Engine...';
+      if (statusPill) statusPill.className = 'live-status-pill offline';
+
+      fetch(`${liveApiBase}/api/status`)
+        .then(res => {
+          if (!res.ok) throw new Error(`Status request failed (${res.status})`);
+          return res.json();
+        })
+        .then(data => {
+          isLiveMode = true;
+          document.getElementById('btnEnvV1').hidden = true;
+          document.getElementById('btnEnvV2').classList.add('active');
+          if (statusPill) statusPill.className = 'live-status-pill online';
+          if (statusDot) statusDot.className = 'live-dot pulse';
+      if (statusLabel) statusLabel.textContent = `Live model · V2 · 8 vehicles`;
+          connectWebSocket();
+        })
+        .catch(err => {
+          isLiveMode = false;
+          document.getElementById('btnEnvV1').hidden = false;
+          if (statusPill) statusPill.className = 'live-status-pill offline';
+          if (statusDot) statusDot.className = 'live-dot';
+          if (statusLabel) statusLabel.textContent = `Replay Mode (Run 'python run_live.py' for Live Engine)`;
+          if (isManualCheck) {
+            alert("Python live simulation backend not detected at " + liveApiBase + ".\n\nTo run the live computational model:\n1. Open your terminal\n2. Run: python run_live.py\n3. Click this status button again to reconnect.");
+          }
+        });
+    }
+
+    function connectWebSocket() {
+      if (liveWs && (liveWs.readyState === WebSocket.OPEN || liveWs.readyState === WebSocket.CONNECTING)) {
+        return;
+      }
+      try {
+        liveWs = new WebSocket(liveWsUrl);
+        liveWs.onopen = () => {
+          console.log("Live simulation connected:", liveWsUrl);
+          const statusPill = document.getElementById('liveBackendStatus');
+          const statusLabel = document.getElementById('liveStatusLabel');
+          if (statusPill) statusPill.className = 'live-status-pill online';
+          if (statusLabel) statusLabel.textContent = `Live model · V2 · 8 vehicles`;
+        };
+        liveWs.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            if (msg.type === 'state_update' || msg.type === 'init') {
+              onLiveStateReceived(msg.data);
+            } else if (msg.type === 'comparison_result') {
+              renderComparisonResult(msg.data);
+            }
+          } catch(e) {
+            console.warn("Error parsing WebSocket message:", e);
+          }
+        };
+        liveWs.onclose = () => {
+          const statusPill = document.getElementById('liveBackendStatus');
+          const statusLabel = document.getElementById('liveStatusLabel');
+          if (statusPill) statusPill.className = 'live-status-pill offline';
+          if (statusLabel) statusLabel.textContent = 'Connection interrupted · retrying';
+          console.log("WebSocket disconnected. Retrying in 3s...");
+          setTimeout(() => {
+            if (isLiveMode) connectWebSocket();
+          }, 3000);
+        };
+        liveWs.onerror = (e) => {
+          console.warn("WebSocket error:", e);
+        };
+      } catch(e) {
+        console.warn("Could not establish WebSocket:", e);
+      }
+    }
+
+    function onLiveStateReceived(data) {
+      currentLiveState = data;
+      currentStep = data.step;
+
+      // Sync toolbar controls
+      const dispSel = document.getElementById('selLiveDispatcher');
+      if (dispSel && dispSel.value !== data.dispatcher_type) dispSel.value = data.dispatcher_type;
+
+      const modeSel = document.getElementById('selLiveMode');
+      if (modeSel && modeSel.value !== data.mode) modeSel.value = data.mode;
+
+      const hsSel = document.getElementById('selLiveHotspot');
+      if (hsSel && parseInt(hsSel.value, 10) !== data.surge_quad) hsSel.value = data.surge_quad;
+
+      const seedInp = document.getElementById('inpLiveSeed');
+      if (seedInp && parseInt(seedInp.value, 10) !== data.seed) seedInp.value = data.seed;
+
+      // Sync header policy text
+      const headerPolicyText = document.getElementById('headerPolicyText');
+      if (headerPolicyText) {
+        const polNames = { 'rl': 'Tabular Q-Learning (V2)', 'baseline': 'Nearest-Vehicle Baseline', 'rule': 'Forecast-Aware Rule' };
+        headerPolicyText.textContent = polNames[data.dispatcher_type] || data.dispatcher_type;
+      }
+
+      // Sync play controls
+      const playIcon = document.getElementById('livePlayIcon');
+      const playText = document.getElementById('livePlayText');
+      if (playIcon) playIcon.innerHTML = data.is_running ? '&#10074;&#10074;' : '&#9658;';
+      if (playText) playText.textContent = data.is_running ? 'Pause' : 'Live Play';
+      updatePlayControls();
+
+      // Sync speed buttons
+      [1.0, 2.0, 5.0, 10.0].forEach(s => {
+        const btn = document.getElementById(`spd${parseInt(s)}`);
+        if (btn) btn.classList.toggle('active', Math.abs(data.speed_multiplier - s) < 0.1);
+      });
+
+      // Update simulation UI
+      updateSimulationUI(data);
+
+      // Render Decision Inspector
+      renderLiveDecisionInspector(data);
+
+      // Render Recent Decisions
+      renderRecentDecisions(data.recent_decisions || []);
+
+      // Render Map
+      renderMap();
+    }
+
+    function handleLiveStep() {
+      if (isLiveMode) {
+        if (liveWs && liveWs.readyState === WebSocket.OPEN) {
+          liveWs.send(JSON.stringify({command: "step"}));
+        } else {
+          fetch(`${liveApiBase}/api/step`, {method: 'POST'})
+            .then(r => r.json())
+            .then(onLiveStateReceived);
+        }
+      } else {
+        stepSimulation(1);
+      }
+    }
+
+    function handleLivePlayToggle() {
+      if (isLiveMode) {
+        const isRunning = currentLiveState && currentLiveState.is_running;
+        const cmd = isRunning ? "pause" : "start";
+        if (liveWs && liveWs.readyState === WebSocket.OPEN) {
+          liveWs.send(JSON.stringify({command: cmd}));
+        } else {
+          fetch(`${liveApiBase}/api/${cmd}`, {method: 'POST'})
+            .then(r => r.json())
+            .then(data => {
+              if (cmd === 'start') {
+                if (currentLiveState) currentLiveState.is_running = true;
+              } else {
+                if (currentLiveState) currentLiveState.is_running = false;
+              }
+              onLiveStateReceived(currentLiveState);
+            });
+        }
+      } else {
+        togglePlayPause();
+      }
+    }
+
+    function handleLiveReset() {
+      const seed = document.getElementById('inpLiveSeed') ? parseInt(document.getElementById('inpLiveSeed').value, 10) : 5000;
+      const surgeQuad = document.getElementById('selLiveHotspot') ? parseInt(document.getElementById('selLiveHotspot').value, 10) : 0;
+      const dispatcher = document.getElementById('selLiveDispatcher') ? document.getElementById('selLiveDispatcher').value : 'rl';
+      const mode = document.getElementById('selLiveMode') ? document.getElementById('selLiveMode').value : 'inference';
+
+      if (isLiveMode) {
+        if (liveWs && liveWs.readyState === WebSocket.OPEN) {
+          liveWs.send(JSON.stringify({command: "reset", seed, surge_quad: surgeQuad, dispatcher, mode}));
+        } else {
+          fetch(`${liveApiBase}/api/reset`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({seed, surge_quad: surgeQuad, dispatcher, mode})
+          })
+          .then(r => r.json())
+          .then(onLiveStateReceived);
+        }
+      } else {
+        resetSimulation();
+      }
+    }
+
+    function handleLiveSpeed(spd) {
+      if (isLiveMode) {
+        if (liveWs && liveWs.readyState === WebSocket.OPEN) {
+          liveWs.send(JSON.stringify({command: "set_speed", speed: spd}));
+        } else {
+          fetch(`${liveApiBase}/api/speed`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({speed: spd})
+          });
+        }
+      } else {
+        changeSpeed(spd);
+      }
+    }
+
+    function onLiveDispatcherChange(val) {
+      currentPolicy = (val === 'rl') ? 'rl' : 'baseline';
+      if (isLiveMode) {
+        if (liveWs && liveWs.readyState === WebSocket.OPEN) {
+          liveWs.send(JSON.stringify({command: "set_dispatcher", dispatcher: val}));
+        } else {
+          fetch(`${liveApiBase}/api/dispatcher`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({dispatcher: val})
+          });
+        }
+      } else {
+        switchReplayPolicy(currentPolicy);
+      }
+    }
+
+    function onLiveModeChange(val) {
+      if (isLiveMode) {
+        if (liveWs && liveWs.readyState === WebSocket.OPEN) {
+          liveWs.send(JSON.stringify({command: "set_mode", mode: val}));
+        } else {
+          fetch(`${liveApiBase}/api/mode`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({mode: val})
+          });
+        }
+      }
+    }
+
+    function onLiveHotspotChange(val) {
+      handleLiveReset();
+    }
+
+    function onLiveSeedChange(val) {
+      handleLiveReset();
+    }
+
+    function renderLiveDecisionInspector(data) {
+      const insp = data.inspector;
+      if (!insp) return;
+
+      const stateEl = document.getElementById('liveInspStateId');
+      if (stateEl) stateEl.textContent = `State #${insp.state.state_id} (${insp.state.formula})`;
+
+      const vqEl = document.getElementById('liveInspVehQuad');
+      if (vqEl) vqEl.textContent = insp.state.vehicle_quad_name;
+
+      const phEl = document.getElementById('liveInspPhase');
+      if (phEl) phEl.textContent = insp.state.phase_name;
+
+      const hsEl = document.getElementById('liveInspHotspot');
+      if (hsEl) hsEl.textContent = insp.state.hotspot_quad_name;
+
+      const ownEl = document.getElementById('liveInspOwnQueue');
+      if (ownEl) ownEl.textContent = `${insp.state.own_bucket_name} (${insp.state.own_bucket})`;
+
+      const hotEl = document.getElementById('liveInspHotspotQueue');
+      if (hotEl) hotEl.textContent = `${insp.state.hotspot_bucket_name} (${insp.state.hotspot_bucket})`;
+
+      const actionEl = document.getElementById('liveInspChosenAction');
+      const subtitleEl = document.getElementById('liveDecisionVehSubtitle');
+      const selVeh = insp.selected_vehicle || {};
+      if (subtitleEl) subtitleEl.textContent = `Vehicle AV-${selVeh.id !== undefined ? selVeh.id : 0} (${selVeh.status || 'idle'}) @ (${selVeh.x || 0}, ${selVeh.y || 0})`;
+
+      const lastDec = insp.latest_decision;
+      if (actionEl) {
+        if (lastDec) {
+          actionEl.textContent = `${lastDec.action_name} (${lastDec.selection_method})`;
+        } else {
+          actionEl.textContent = 'Standby / Idle';
+        }
+      }
+
+      // Populate Actions Table
+      const tbody = document.getElementById('liveInspQTableBody');
+      if (tbody && insp.actions) {
+        tbody.innerHTML = '';
+        insp.actions.forEach(act => {
+          const isChosen = lastDec && (lastDec.selected_action === act.id);
+          const tr = document.createElement('tr');
+          if (isChosen) tr.className = 'action-greedy';
+          tr.innerHTML = `
+            <td style="font-family:var(--font-mono); font-weight:700;">${act.id}</td>
+            <td style="font-weight:600;">${act.name}</td>
+            <td style="font-family:var(--font-mono); font-weight:700; color:${act.q_value >= 0 ? 'var(--accent-emerald)' : 'var(--accent-red)'};">
+              ${act.q_value >= 0 ? '+' : ''}${act.q_value.toFixed(2)}
+            </td>
+            <td>
+              <span class="${act.is_valid ? 'badge-valid' : 'badge-masked'}">${act.is_valid ? 'VALID' : 'MASKED'}</span>
+            </td>
+            <td>
+              ${isChosen ? `<span class="badge-greedy">&#10003; ${lastDec.is_greedy ? 'GREEDY' : 'EXPLORE'}</span>` : (act.is_greedy ? '<span style="color:var(--text-tertiary); font-size:10px;">Max Valid Q</span>' : '<span style="color:var(--text-tertiary); font-size:10px;">Suboptimal</span>')}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Transition Details
+      const transBox = document.getElementById('liveTransitionDetailsBox');
+      const transContent = document.getElementById('liveTransitionDetailsContent');
+      if (transBox && transContent) {
+        const transitions = data.step_info ? data.step_info.transitions : [];
+        if (transitions && transitions.length > 0) {
+          const tr = transitions[transitions.length - 1];
+          transBox.style.display = 'block';
+          transContent.innerHTML = `
+            <div>AV-${tr.vehicle_id} Decision Finished &bull; Duration &Delta;t: <strong>${tr.duration} steps</strong></div>
+            <div>Discounted Return G: <strong>${tr.discounted_reward >= 0 ? '+' : ''}${tr.discounted_reward}</strong> &bull; Target: <strong>${tr.target}</strong></div>
+            <div>TD Error &delta;: <strong>${tr.td_error >= 0 ? '+' : ''}${tr.td_error}</strong> &bull; &Delta;Q: <strong style="color:var(--accent-emerald);">${tr.delta_q >= 0 ? '+' : ''}${tr.delta_q}</strong></div>
+            <div>Q(s=${tr.state}, a=${tr.action}): <strong>${tr.old_q}</strong> &rarr; <strong style="color:var(--accent-blue);">${tr.new_q}</strong></div>
+          `;
+        } else if (data.mode === 'training') {
+          transBox.style.display = 'block';
+          transContent.innerHTML = `<div>Mode B Active: Online Q-learning updates will execute upon multi-step decision completion.</div>`;
+        } else {
+          transBox.style.display = 'none';
+        }
+      }
+    }
+
+    function renderRecentDecisions(decisions) {
+      const tbody = document.getElementById('recentDecisionsBody');
+      if (!tbody) return;
+      if (!decisions || decisions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-tertiary); padding:8px;">No decisions executed yet. Click STEP or Live Play.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = '';
+      const reversed = [...decisions].reverse().slice(0, 15);
+      reversed.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-family:var(--font-mono); font-weight:600;">${d.step}</td>
+          <td style="font-family:var(--font-mono); color:var(--accent-blue);">AV-${d.vehicle_id}</td>
+          <td style="font-weight:600;">${d.action_name}</td>
+          <td><span class="badge-greedy" style="font-size:9.5px;">${d.is_greedy ? 'GREEDY' : 'EXPLORE'}</span></td>
+          <td style="font-family:var(--font-mono); font-size:10px;">${d.target ? `&rarr; (${d.target[0]}, ${d.target[1]})` : 'standby'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openComparisonModal() {
+      const modal = document.getElementById('comparisonModal');
+      const body = document.getElementById('comparisonModalBody');
+      const loadBtn = document.getElementById('btnLoadComparisonToReplay');
+      if (modal) modal.style.display = 'flex';
+      if (loadBtn) loadBtn.style.display = 'none';
+      if (body) {
+        body.innerHTML = `
+          <div style="text-align:center; padding:40px; color:var(--text-secondary);">
+            <div style="font-size:14px; font-weight:600; margin-bottom:8px; color:var(--accent-blue);">Running Paired Simulation in Python Simulator...</div>
+            <div style="font-size:12px; color:var(--text-tertiary);">Executing 300 steps across Nearest Baseline, Forecast Rule, and Tabular Q-Learning under identical seed.</div>
+          </div>
+        `;
+      }
+
+      const seed = document.getElementById('inpLiveSeed') ? parseInt(document.getElementById('inpLiveSeed').value, 10) : 5000;
+      const surgeQuad = document.getElementById('selLiveHotspot') ? parseInt(document.getElementById('selLiveHotspot').value, 10) : 0;
+
+      fetch(`${liveApiBase}/api/compare`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seed: seed, surge_quad: surgeQuad })
+      })
+      .then(res => res.json())
+      .then(data => renderComparisonResult(data))
+      .catch(err => {
+        if (body) {
+          body.innerHTML = `
+            <div style="text-align:center; padding:20px; color:var(--accent-red);">
+              <strong>Comparison execution failed:</strong> ${err.message}. Ensure python server is running.
+            </div>
+          `;
+        }
+      });
+    }
+
+    function closeComparisonModal() {
+      const modal = document.getElementById('comparisonModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function renderComparisonResult(data) {
+      currentComparisonData = data;
+      const body = document.getElementById('comparisonModalBody');
+      const loadBtn = document.getElementById('btnLoadComparisonToReplay');
+      if (loadBtn) loadBtn.style.display = 'inline-flex';
+      if (!body) return;
+
+      const b = data.baseline.metrics;
+      const f = data.forecast_rule.metrics;
+      const q = data.qlearning.metrics;
+      const d = data.deltas_rl_vs_baseline;
+
+      const metricsList = [
+        { label: 'Overall Average Wait Time', bVal: `${b.avg_wait.toFixed(2)} steps`, fVal: `${f.avg_wait.toFixed(2)} steps`, qVal: `${q.avg_wait.toFixed(2)} steps`, delta: `${d.avg_wait_diff > 0 ? '+' : ''}${d.avg_wait_diff.toFixed(2)} steps`, winner: d.avg_wait_winner, lowerBetter: true },
+        { label: 'Surge Phase Wait Time (Steps 100-199)', bVal: `${b.surge_wait.toFixed(2)} steps`, fVal: `${f.surge_wait.toFixed(2)} steps`, qVal: `${q.surge_wait.toFixed(2)} steps`, delta: `${d.surge_wait_diff > 0 ? '+' : ''}${d.surge_wait_diff.toFixed(2)} steps`, winner: d.surge_wait_winner, lowerBetter: true },
+        { label: 'Normal Phase Wait Time', bVal: `${b.normal_wait.toFixed(2)} steps`, fVal: `${f.normal_wait.toFixed(2)} steps`, qVal: `${q.normal_wait.toFixed(2)} steps`, delta: `${(q.normal_wait - b.normal_wait).toFixed(2)} steps`, winner: q.normal_wait <= b.normal_wait ? 'RL' : 'Baseline', lowerBetter: true },
+        { label: 'Completed Passenger Trips', bVal: `${b.served} trips`, fVal: `${f.served} trips`, qVal: `${q.served} trips`, delta: `${d.served_diff > 0 ? '+' : ''}${d.served_diff} trips`, winner: d.served_diff >= 0 ? 'RL' : 'Baseline', lowerBetter: false },
+        { label: 'Dropped Passenger Requests (Timeouts)', bVal: `${b.dropped} cancellations`, fVal: `${f.dropped} cancellations`, qVal: `${q.dropped} cancellations`, delta: `${d.dropped_diff > 0 ? '+' : ''}${d.dropped_diff} drops`, winner: d.dropped_diff <= 0 ? 'RL' : 'Baseline', lowerBetter: true },
+        { label: 'Service Fulfillment Rate (%)', bVal: `${b.service_rate.toFixed(1)}%`, fVal: `${f.service_rate.toFixed(1)}%`, qVal: `${q.service_rate.toFixed(1)}%`, delta: `${(q.service_rate - b.service_rate).toFixed(1)}%`, winner: q.service_rate >= b.service_rate ? 'RL' : 'Baseline', lowerBetter: false },
+        { label: 'Total Fleet Distance Travelled', bVal: `${b.total_dist} steps`, fVal: `${f.total_dist} steps`, qVal: `${q.total_dist} steps`, delta: `${(q.total_dist - b.total_dist) > 0 ? '+' : ''}${q.total_dist - b.total_dist} steps`, winner: q.total_dist <= b.total_dist ? 'RL' : 'Baseline', lowerBetter: true },
+        { label: 'Cumulative Fleet Reward', bVal: `${b.cumulative_reward.toFixed(2)}`, fVal: `${f.cumulative_reward.toFixed(2)}`, qVal: `${q.cumulative_reward.toFixed(2)}`, delta: `${d.reward_diff > 0 ? '+' : ''}${d.reward_diff.toFixed(2)}`, winner: d.reward_diff >= 0 ? 'RL' : 'Baseline', lowerBetter: false }
+      ];
+
+      let rowsHtml = '';
+      metricsList.forEach(m => {
+        const isRlWinner = (m.winner === 'RL' || m.winner === 'Tie');
+        rowsHtml += `
+          <tr>
+            <td style="font-weight:600;">${m.label}</td>
+            <td style="font-family:var(--font-mono);">${m.bVal}</td>
+            <td style="font-family:var(--font-mono);">${m.fVal}</td>
+            <td style="font-family:var(--font-mono); font-weight:700; color:var(--accent-blue);">${m.qVal}</td>
+            <td style="font-family:var(--font-mono); font-weight:600; color:${isRlWinner ? 'var(--accent-emerald)' : 'var(--accent-red)'};">${m.delta}</td>
+            <td>
+              <span class="status-tag" style="background:${isRlWinner ? 'var(--accent-emerald-subtle)' : 'var(--accent-amber-subtle)'}; color:${isRlWinner ? 'var(--accent-emerald)' : 'var(--accent-amber)'}; font-weight:700;">
+                ${m.winner}
+              </span>
+            </td>
+          </tr>
+        `;
+      });
+
+      body.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; background:var(--bg-surface); padding:10px 14px; border-radius:var(--radius-sm);">
+          <div>
+            <span style="color:var(--text-secondary);">Test Seed:</span> <strong style="font-family:var(--font-mono); color:var(--accent-blue);">${data.seed}</strong>
+            &bull; <span style="color:var(--text-secondary);">Hotspot:</span> <strong style="color:var(--accent-amber);">${data.surge_quad_name}</strong>
+          </div>
+          <div style="font-size:11px; color:var(--text-tertiary);">
+            300 timesteps &bull; 8 vehicles &bull; 16&times;16 city grid &bull; Identical passenger realization
+          </div>
+        </div>
+
+        <table class="data-table" style="font-size:12px;">
+          <thead>
+            <tr>
+              <th>Performance Metric</th>
+              <th>Nearest Baseline</th>
+              <th>Forecast-Aware Rule</th>
+              <th>Tabular Q-Learning (RL)</th>
+              <th>RL Delta vs Baseline</th>
+              <th>Winner</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+
+        <div style="margin-top:14px; padding:10px 14px; background:var(--bg-surface); border-radius:var(--radius-sm); font-size:11.5px; color:var(--text-secondary); line-height:1.5;">
+          <strong>Comparison setup:</strong> Each policy uses the same seed and demand schedule. Q-learning can move idle vehicles toward ${data.surge_quad_name} before the surge begins.
+        </div>
+      `;
+    }
+
+    function loadComparisonIntoReplay() {
+      if (!currentComparisonData || !currentComparisonData.rl_frames) return;
+      isLiveMode = false;
+      window.REPLAY_DATA = window.REPLAY_DATA || {};
+      window.REPLAY_DATA.rl_frames = currentComparisonData.rl_frames;
+      window.REPLAY_DATA.baseline_frames = currentComparisonData.baseline_frames;
+      currentStep = 0;
+      closeComparisonModal();
+      switchNav('live-fleet');
+      updateSimulationUI();
+    }
+    // Simulation playback
     function getFrames() {
       const rd = getReplayData();
       if (!rd) return [];
@@ -2384,6 +3201,10 @@
     }
 
     function togglePlayPause() {
+      if (isLiveMode) {
+        handleLivePlayToggle();
+        return;
+      }
       isPlaying = !isPlaying;
       updatePlayControls();
       if (isPlaying) {
@@ -2415,6 +3236,10 @@
     }
 
     function stepSimulation(delta) {
+      if (isLiveMode) {
+        handleLiveStep();
+        return;
+      }
       stopPlayLoop();
       isPlaying = false;
       updatePlayControls();
@@ -2424,6 +3249,10 @@
     }
 
     function resetSimulation() {
+      if (isLiveMode) {
+        handleLiveReset();
+        return;
+      }
       stopPlayLoop();
       isPlaying = false;
       currentStep = 0;
@@ -2432,6 +3261,9 @@
     }
 
     function onScrub(val) {
+      if (isLiveMode) {
+        return;
+      }
       stopPlayLoop();
       isPlaying = false;
       currentStep = parseInt(val, 10);
@@ -2440,6 +3272,10 @@
     }
 
     function changeSpeed(val) {
+      if (isLiveMode) {
+        handleLiveSpeed(parseFloat(val));
+        return;
+      }
       playSpeed = parseFloat(val);
       if (isPlaying) {
         startPlayLoop();
@@ -2450,9 +3286,10 @@
       const playIcon = document.getElementById('playIcon');
       const playText = document.getElementById('playText');
       const fullPlayText = document.getElementById('fullPlayText');
-      if (playIcon) playIcon.innerHTML = isPlaying ? '&#10074;&#10074;' : '&#9658;';
-      if (playText) playText.textContent = isPlaying ? 'Pause' : 'Play';
-      if (fullPlayText) fullPlayText.innerHTML = isPlaying ? '&#10074;&#10074;' : '&#9658;';
+      const running = isLiveMode ? (currentLiveState && currentLiveState.is_running) : isPlaying;
+      if (playIcon) playIcon.innerHTML = running ? '&#10074;&#10074;' : '&#9658;';
+      if (playText) playText.textContent = running ? 'Pause' : 'Play';
+      if (fullPlayText) fullPlayText.innerHTML = running ? '&#10074;&#10074;' : '&#9658;';
     }
 
     function switchReplayPolicy(pol) {
@@ -2461,10 +3298,15 @@
       if (headerPolicyText) {
         headerPolicyText.textContent = pol === 'rl' ? 'Tabular Q-Learning' : 'Nearest-Vehicle Baseline';
       }
-      updateSimulationUI();
+      if (isLiveMode) {
+        onLiveDispatcherChange(pol);
+      } else {
+        updateSimulationUI();
+      }
     }
 
     function setEnv(env) {
+      if (isLiveMode && env !== 'v2') return;
       currentEnv = env;
       document.getElementById('btnEnvV2').classList.toggle('active', env === 'v2');
       document.getElementById('btnEnvV1').classList.toggle('active', env === 'v1');
@@ -2480,14 +3322,10 @@
       if (chk2) chk2.checked = checked;
       renderMap();
     }
-
-    // ==========================================================================
-    // SIMULATION UI UPDATE & METRICS SYNC
-    // ==========================================================================
-    function updateSimulationUI() {
-      const frames = getFrames();
-      if (!frames || frames.length === 0) return;
-      const frame = frames[currentStep] || frames[0];
+    // Simulation display and metrics
+    function updateSimulationUI(customFrame) {
+      const frame = customFrame || getCurrentFrame();
+      if (!frame) return;
 
       // Update scrubbers
       const s1 = document.getElementById('timelineScrubber');
@@ -2496,13 +3334,13 @@
       if (s2) s2.value = currentStep;
 
       // Update step counters
-      const stepTxt = `Step ${frame.step} / 300`;
+      const stepTxt = `Step ${frame.step} / ${frame.max_steps || 300}`;
       const stepElem1 = document.getElementById('stepCounterText');
       const stepElem2 = document.getElementById('stepCounterTextFull');
       const opsStepElem = document.getElementById('opsCurrentStep');
       if (stepElem1) stepElem1.textContent = stepTxt;
       if (stepElem2) stepElem2.textContent = stepTxt;
-      if (opsStepElem) opsStepElem.textContent = `${frame.step} / 300`;
+      if (opsStepElem) opsStepElem.textContent = `${frame.step} / ${frame.max_steps || 300}`;
 
       // Update Phase Badge in Header & Banner
       const phaseNames = ['Phase 0: Normal', 'Phase 1: Pre-Surge Warning', 'Phase 2: Active Surge', 'Phase 3: Post-Surge'];
@@ -2567,29 +3405,34 @@
       const utilPct = numVehicles > 0 ? ((busyCount / numVehicles) * 100).toFixed(1) : '0.0';
 
       // Update Top KPIs
+      const servedVal = frame.metrics ? frame.metrics.served : (frame.served || 0);
+      const droppedVal = frame.metrics ? frame.metrics.dropped : (frame.dropped || 0);
+      const pendingList = frame.pending || frame.active_requests || [];
+      const pendingVal = frame.metrics ? frame.metrics.pending_count : pendingList.length;
+
       document.getElementById('kpiFleetSize').textContent = numVehicles;
       document.getElementById('kpiUtilization').textContent = `${utilPct}%`;
       document.getElementById('kpiBusyBreakdown').textContent = `${busyCount} busy / ${idleCount} idle (${repoCount} repo)`;
-      document.getElementById('kpiPendingCount').textContent = (frame.pending || []).length;
-      document.getElementById('kpiServedCount').textContent = frame.served || 0;
-      document.getElementById('kpiDroppedCount').textContent = frame.dropped || 0;
+      document.getElementById('kpiPendingCount').textContent = pendingVal;
+      document.getElementById('kpiServedCount').textContent = servedVal;
+      document.getElementById('kpiDroppedCount').textContent = droppedVal;
 
       // Update Overview Live Sidebar Box
-      const liveWait = frame.avg_wait ? frame.avg_wait.toFixed(2) : '0.00';
+      const liveWait = frame.metrics ? frame.metrics.avg_wait.toFixed(2) : (frame.avg_wait ? frame.avg_wait.toFixed(2) : '0.00');
       document.getElementById('ovLiveAvgWait').textContent = liveWait;
-      const totalRequests = (frame.served || 0) + (frame.dropped || 0) + (frame.pending || []).length;
+      const totalRequests = servedVal + droppedVal + pendingVal;
       document.getElementById('ovTotalSpawned').textContent = totalRequests;
-      const fulfillment = (frame.served || 0) + (frame.dropped || 0) > 0 ?
-        (((frame.served || 0) / ((frame.served || 0) + (frame.dropped || 0))) * 100).toFixed(1) + '%' : '100.0%';
+      const fulfillment = (servedVal + droppedVal) > 0 ?
+        (((servedVal) / (servedVal + droppedVal)) * 100).toFixed(1) + '%' : '100.0%';
       document.getElementById('ovFulfillmentRate').textContent = fulfillment;
 
       // Update Dispatch Tab KPIs & Table
-      document.getElementById('dispPendingVal').textContent = (frame.pending || []).length;
-      document.getElementById('dispServedVal').textContent = frame.served || 0;
-      document.getElementById('dispDroppedVal').textContent = frame.dropped || 0;
+      document.getElementById('dispPendingVal').textContent = pendingVal;
+      document.getElementById('dispServedVal').textContent = servedVal;
+      document.getElementById('dispDroppedVal').textContent = droppedVal;
       document.getElementById('dispAvgWaitVal').textContent = liveWait;
-      document.getElementById('dispQueueCountBadge').textContent = `${(frame.pending || []).length} requests active`;
-      renderDispatchTable(frame.pending || [], frame.grid_size || 16);
+      document.getElementById('dispQueueCountBadge').textContent = `${pendingVal} requests active`;
+      renderDispatchTable(pendingList, frame.grid_size || 16);
 
       // Update Vehicle Roster & Telemetry Card
       renderVehicleRoster(vehicles, frame.grid_size || 16);
@@ -2598,10 +3441,7 @@
       // Render Active Map
       renderMap();
     }
-
-    // ==========================================================================
-    // VEHICLE TELEMETRY INSPECTOR & ROSTER
-    // ==========================================================================
+    // Vehicle inspector and roster
     function getQuadFromCoords(x, y, gridSize) {
       const mid = Math.floor(gridSize / 2);
       if (x < mid && y < mid) return 'Q0 (NW)';
@@ -2620,7 +3460,11 @@
         row.className = `vehicle-row ${v.id === selectedVehicleId ? 'selected' : ''}`;
         row.onclick = () => {
           selectedVehicleId = v.id;
-          updateSimulationUI();
+          if (isLiveMode && liveWs && liveWs.readyState === WebSocket.OPEN) {
+            liveWs.send(JSON.stringify({command: "select_vehicle", vehicle_id: v.id}));
+          } else {
+            updateSimulationUI();
+          }
         };
 
         const quad = getQuadFromCoords(v.x, v.y, gridSize);
@@ -2681,10 +3525,7 @@
       document.getElementById('fullVehDist').textContent = `${dist} steps`;
       document.getElementById('fullVehAction').textContent = actionDesc;
     }
-
-    // ==========================================================================
-    // DISPATCH REQUEST QUEUE TABLE
-    // ==========================================================================
+    // Dispatch queue
     function renderDispatchTable(pendingList, gridSize) {
       const tbody = document.getElementById('dispatchTableBody');
       if (!tbody) return;
@@ -2726,10 +3567,7 @@
         tbody.appendChild(tr);
       });
     }
-
-    // ==========================================================================
-    // MAP CANVAS RENDERING ENGINE (BULLETPROOF, HIGH-CONTRAST)
-    // ==========================================================================
+    // Draw the city grid and vehicle routes
     function initCanvases() {
       overviewCanvas = document.getElementById('overviewCanvas');
       if (overviewCanvas) overviewCtx = overviewCanvas.getContext('2d');
@@ -2745,9 +3583,8 @@
       const clickX = (e.clientX - rect.left) * scaleX;
       const clickY = (e.clientY - rect.top) * scaleY;
 
-      const frames = getFrames();
-      if (!frames || frames.length === 0) return;
-      const frame = frames[currentStep] || frames[0];
+      const frame = getCurrentFrame();
+      if (!frame) return;
       const gridSize = frame.grid_size || 16;
       const cellSize = canvas.width / gridSize;
 
@@ -2758,14 +3595,17 @@
       const found = (frame.vehicles || []).find(v => v.x === cellX && v.y === cellY);
       if (found) {
         selectedVehicleId = found.id;
-        updateSimulationUI();
+        if (isLiveMode && liveWs && liveWs.readyState === WebSocket.OPEN) {
+          liveWs.send(JSON.stringify({command: "select_vehicle", vehicle_id: found.id}));
+        } else {
+          updateSimulationUI();
+        }
       }
     }
 
     function renderMap() {
-      const frames = getFrames();
-      if (!frames || frames.length === 0) return;
-      const frame = frames[currentStep] || frames[0];
+      const frame = getCurrentFrame();
+      if (!frame) return;
 
       if (overviewCtx && overviewCanvas) {
         drawGridFrame(overviewCtx, overviewCanvas.width, overviewCanvas.height, frame);
@@ -2783,7 +3623,7 @@
       const mid = Math.floor(gridSize / 2);
 
       // Canvas Background (rich dark blue-gray)
-      ctx.fillStyle = '#081022';
+      ctx.fillStyle = '#f6f7f3';
       ctx.fillRect(0, 0, width, height);
 
       // Draw Hotspot Shading (if phase is pre-surge or surge)
@@ -2804,12 +3644,12 @@
 
         // Hotspot Watermark text
         ctx.fillStyle = frame.phase === 2 ? '#fbbf24' : '#60a5fa';
-        ctx.font = '700 11px Inter, sans-serif';
+      ctx.font = '700 11px Aptos, "Segoe UI", sans-serif';
         ctx.fillText(frame.phase === 2 ? 'SURGE HOTSPOT ACTIVE' : 'PRE-SURGE TARGET ZONE', startX + 10, startY + span - 10);
       }
 
-      // Draw Street Grid Lines (clear high-contrast)
-      ctx.strokeStyle = '#1e2f4d';
+      // Draw the street grid.
+      ctx.strokeStyle = '#d8ded5';
       ctx.lineWidth = 1;
       for (let i = 0; i <= gridSize; i++) {
         ctx.beginPath();
@@ -2824,7 +3664,7 @@
       }
 
       // Draw Major Quadrant Dividers
-      ctx.strokeStyle = '#3b82f6';
+      ctx.strokeStyle = '#8ba494';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(mid * cellSize, 0);
@@ -2838,7 +3678,7 @@
 
       // Quadrant Label Watermarks
       ctx.fillStyle = '#64748b';
-      ctx.font = '700 12px Inter, sans-serif';
+      ctx.font = '700 12px Aptos, "Segoe UI", sans-serif';
       ctx.fillText('Q0 (NW)', 10, 20);
       ctx.fillText('Q1 (NE)', mid * cellSize + 10, 20);
       ctx.fillText('Q2 (SW)', 10, mid * cellSize + 20);
@@ -2968,17 +3808,14 @@
 
           // Vehicle ID Text
           ctx.fillStyle = '#ffffff';
-          ctx.font = '700 10px "JetBrains Mono", monospace';
+          ctx.font = '700 10px "Cascadia Code", Consolas, monospace';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(v.id, cx, cy);
         });
       });
     }
-
-    // ==========================================================================
-    // LEARNED Q-TABLE POLICY INSPECTOR
-    // ==========================================================================
+    // Q-table policy inspector
     function renderInitialPolicyInspector() {
       updatePolicyInspector();
     }
@@ -3100,10 +3937,7 @@
         tbody.appendChild(tr);
       });
     }
-
-    // ==========================================================================
-    // BENCHMARK TABLE RENDERING
-    // ==========================================================================
+    // Benchmark table
     function renderBenchmarkTable() {
       const tbody = document.getElementById('benchmarkTableBody');
       const rd = getReplayData();
@@ -3153,17 +3987,14 @@
         tbody.appendChild(tr);
       });
     }
-
-    // ==========================================================================
-    // CHART.JS INITIALIZATION & DATA BINDING
-    // ==========================================================================
+    // Chart setup
     function initAllCharts() {
       const rd = getReplayData();
       if (!window.Chart || !rd) return;
 
-      Chart.defaults.color = '#94a3b8';
-      Chart.defaults.borderColor = '#1e2f4d';
-      Chart.defaults.font.family = 'Inter, sans-serif';
+      Chart.defaults.color = '#65736a';
+      Chart.defaults.borderColor = '#d9ded6';
+      Chart.defaults.font.family = 'Aptos, "Segoe UI", sans-serif';
 
       try { initQueueDynamicsChart(); } catch(e) { console.warn(e); }
       try { initArrivalPhasesChart(); } catch(e) { console.warn(e); }
@@ -3452,5 +4283,34 @@
       }
     }
   </script>
+  <!-- Head-to-head baseline vs rl comparison modal -->
+  <div class="modal-overlay" id="comparisonModal" style="display:none;" onclick="if(event.target === this) closeComparisonModal()">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <h3 style="font-size:16px; font-weight:700; color:var(--text-primary);">&#9876; Head-to-Head Baseline vs RL Benchmark Comparison</h3>
+          <p style="font-size:12px; color:var(--text-secondary); margin-top:3px;">
+            Evaluating reactive Nearest-Vehicle Baseline vs Tabular Q-Learning under <strong>strictly identical conditions</strong>:
+            Exact same random seed, identical passenger spawn sequence, identical fleet starting coordinates, and 300 timesteps.
+          </p>
+        </div>
+        <button class="modal-close-btn" onclick="closeComparisonModal()">&times;</button>
+      </div>
+
+      <div class="modal-body" id="comparisonModalBody">
+        <div style="text-align:center; padding:40px; color:var(--text-secondary);">
+          <div style="font-size:14px; font-weight:600; margin-bottom:8px;">Running Paired Simulation in Python Simulator...</div>
+          <div style="font-size:12px; color:var(--text-tertiary);">Executing 300 steps for Nearest Baseline, Forecast Rule, and Tabular Q-Learning</div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="live-btn" onclick="closeComparisonModal()">Close</button>
+        <button class="live-btn primary" id="btnLoadComparisonToReplay" style="display:none;" onclick="loadComparisonIntoReplay()">
+          &#128065; Load RL Episode Frames into Map Player
+        </button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

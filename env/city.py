@@ -421,7 +421,7 @@ class CityFleetEnv:
         return step_reward, done, info
 
     def get_metrics(self) -> Dict[str, Any]:
-        """Calculates final comprehensive episode metrics."""
+        """Return the metrics collected for this episode."""
         completed = [r for r in self.all_requests if r.status == "COMPLETED"]
         dropped = [r for r in self.all_requests if r.status == "DROPPED"]
         total_spawned = len(self.all_requests)

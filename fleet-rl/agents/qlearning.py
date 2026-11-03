@@ -21,11 +21,11 @@ class QLearningAgent:
         if explore and (np.random.random() < self.eps):
             return int(np.random.choice(valid_actions))
 
-        # Greedy choice among valid actions only
+        # Keep ties in action order so seeded evaluation runs are repeatable.
         q_vals = [self.q_table[state, a] for a in valid_actions]
         max_q = max(q_vals)
         best_actions = [a for a, q in zip(valid_actions, q_vals) if q == max_q]
-        return int(np.random.choice(best_actions))
+        return int(best_actions[0])
 
     def start_decision(self, v_id, state, action):
         self.active_decisions[v_id] = {
@@ -43,7 +43,7 @@ class QLearningAgent:
 
     def finish_decision(self, v_id, next_state, next_valid_actions=None, done=False):
         if v_id not in self.active_decisions:
-            return
+            return None
 
         d = self.active_decisions.pop(v_id)
         s = d["state"]
@@ -60,7 +60,23 @@ class QLearningAgent:
                 max_next = np.max(self.q_table[next_state])
             target = g + (self.gamma ** dt) * max_next
 
-        self.q_table[s, a] += self.lr * (target - self.q_table[s, a])
+        old_q = float(self.q_table[s, a])
+        td_error = float(target - old_q)
+        delta_q = float(self.lr * td_error)
+        self.q_table[s, a] += delta_q
+
+        return {
+            "vehicle_id": v_id,
+            "state": s,
+            "action": a,
+            "duration": dt,
+            "discounted_reward": round(g, 4),
+            "target": round(target, 4),
+            "old_q": round(old_q, 4),
+            "new_q": round(float(self.q_table[s, a]), 4),
+            "td_error": round(td_error, 4),
+            "delta_q": round(delta_q, 4)
+        }
 
     def decay_eps(self):
         self.eps = max(self.eps_min, self.eps * self.eps_decay)
